@@ -30,10 +30,7 @@ jobs:
         run: ./gradlew :app:assembleDebug --stacktrace
         working-directory: android-app
       - name: Build unsigned release APK
-        shell: bash
-        run: |
-          if [ -z "$FME_KEYSTORE_BASE64" ]; then exit 0; fi
-          ./gradlew :app:assembleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease --stacktrace
         working-directory: android-app
       - name: Validate unsigned artifacts
         run: test -s app/build/outputs/apk/debug/app-debug.apk && test -s app/build/outputs/apk/release/app-release-unsigned.apk
@@ -49,13 +46,16 @@ jobs:
           test -s "$RUNNER_TEMP/fme-release.jks"
       - name: Build production-signed APK
         working-directory: android-app
+        shell: bash
         env:
           FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
           FME_KEYSTORE_PATH: ${{ runner.temp }}/fme-release.jks
           FME_KEYSTORE_PASSWORD: ${{ secrets.FME_KEYSTORE_PASSWORD }}
           FME_KEY_ALIAS: ${{ secrets.FME_KEY_ALIAS }}
           FME_KEY_PASSWORD: ${{ secrets.FME_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease --stacktrace
+        run: |
+          if [ -z "$FME_KEYSTORE_BASE64" ]; then exit 0; fi
+          ./gradlew :app:assembleRelease --stacktrace
       - name: Verify production APK signature
         shell: bash
         working-directory: android-app
@@ -71,8 +71,10 @@ jobs:
           sha256sum "$APK" | tee "$RUNNER_TEMP/app-release.sha256"
       - name: Signing gate status
         shell: bash
+        env:
+          FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "${{ secrets.FME_KEYSTORE_BASE64 }}" ]; then
+          if [ -n "$FME_KEYSTORE_BASE64" ]; then
             echo "Production signing evidence: VERIFIED"
           else
             echo "Production signing evidence: PENDING. Configure FME_KEYSTORE_BASE64, FME_KEYSTORE_PASSWORD, FME_KEY_ALIAS and FME_KEY_PASSWORD."
