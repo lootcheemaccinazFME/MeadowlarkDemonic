@@ -30,6 +30,7 @@ public final class TvMediaPlayer implements MediaPlayer.OnCompletionListener {
         releasePlayer();
         player=new MediaPlayer();
         player.setOnCompletionListener(this);
+        player.setVolume(project.tv.volume(),project.tv.volume());
         if(surface!=null) player.setDisplay(surface);
         player.setDataSource(context, Uri.parse(asset.uri));
         player.prepare();
@@ -81,6 +82,18 @@ public final class TvMediaPlayer implements MediaPlayer.OnCompletionListener {
         play();
         return true;
     }
+
+    public boolean channelUp() throws IOException { return next(); }
+
+    public boolean channelDown() throws IOException { return previous(); }
+
+    public float volumeUp() { float v=project.tv.volumeUp(); applyVolume(v); return v; }
+
+    public float volumeDown() { float v=project.tv.volumeDown(); applyVolume(v); return v; }
+
+    public boolean power() throws IOException { boolean on=project.tv.togglePower(); if(!on){if(player!=null&&player.isPlaying())player.pause();}else if(project.tv.current()!=null){play();} return on; }
+
+    private void applyVolume(float v){if(player!=null)player.setVolume(v,v);}
 
     public void fastForwardSeconds(int seconds) { syncPosition(); project.tv.fastForwardSeconds(seconds); seekFrame(project.tv.positionFrame()); }
 
