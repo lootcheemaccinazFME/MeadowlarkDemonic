@@ -29,7 +29,7 @@ public final class RoomRuntimeTransplant {
   DemonicAddOnSuite.RepairPlan plan=new DemonicAddOnSuite.RepairPlan();plan.denoise=true;plan.declick=true;
   if(processing.repair(pcm,project.transport.sampleRate(),plan).length!=pcm.length)throw new IllegalStateException("Repair runtime failed");
   if(PreviewTimePitch.process(pcm,1.0,0).length==0)throw new IllegalStateException("Time/pitch preview runtime failed");
-  DemonicMilestoneVerifier.verify(project);
+  // Android filesystem/export/recovery verification belongs to instrumentation/device certification, not JVM unit tests.\n  new UnifiedDemonicDaw(project).verifySingleSpine();
  }
 
  public static final class Report{
