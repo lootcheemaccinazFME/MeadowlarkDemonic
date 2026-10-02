@@ -16,7 +16,7 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: '8.10.2'
       - name: Unit tests
         run: gradle :app:testDebugUnitTest --stacktrace
         working-directory: android-app
@@ -26,8 +26,11 @@ jobs:
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
         working-directory: android-app
-      - name: Validate APK
-        run: test -s app/build/outputs/apk/debug/app-debug.apk
+      - name: Build unsigned release APK
+        run: gradle :app:assembleRelease --stacktrace
+        working-directory: android-app
+      - name: Validate APKs
+        run: test -s app/build/outputs/apk/debug/app-debug.apk && test -s app/build/outputs/apk/release/app-release-unsigned.apk
         working-directory: android-app
       - uses: actions/upload-artifact@v4
         with:
