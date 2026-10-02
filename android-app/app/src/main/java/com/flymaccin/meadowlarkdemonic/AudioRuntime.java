@@ -44,6 +44,27 @@ public final class AudioRuntime {
                 mix[dst+1]+=Math.round((float)(pcm[src+1]*right));
             }
         }
+        // Render graph sends into buses, then buses into the master mix.
+        for(Track track:project.tracks()){
+            AudioGraph.Node trackNode=project.audioGraph.node(track.graphNodeId);if(trackNode==null)continue;
+            for(AudioGraph.Node send:project.audioGraph.downstream(track.graphNodeId)){
+                if(!"SEND".equals(send.type))continue;
+                double sendGain=send.get("gain",1.0);
+                for(AudioGraph.Node bus:project.audioGraph.downstream(send.id)){
+                    if(!"BUS".equals(bus.type))continue;
+                    double busGain=bus.get("gain",1.0);
+                    // Send taps use the already rendered track contribution for this block.
+                    for(ClipEngine.PlaybackSlice slice:project.clipEngine.slices(startFrame,frames)){
+                        if(!slice.track.id.equals(track.id)||slice.asset.kind!=Asset.Kind.AUDIO)continue;
+                        int count=(int)Math.min(Integer.MAX_VALUE,slice.frames);short[] tap=new short[count*2];
+                        decoder.decode(slice.asset,slice.sourceFrame,count,tap);
+                        for(AudioGraph.Node fx:project.audioGraph.downstream(bus.id))if(fx.type.startsWith("FX_"))GraphDsp.process(fx,tap,count);
+                        int offset=(int)(slice.timelineFrame-startFrame);
+                        for(int i=0;i<count&&offset+i<frames;i++){int dst=(offset+i)*2,src=i*2;mix[dst]+=Math.round((float)(tap[src]*sendGain*busGain));mix[dst+1]+=Math.round((float)(tap[src+1]*sendGain*busGain));}
+                    }
+                }
+            }
+        }
         AudioGraph.Node master=project.audioGraph.node(AudioGraph.MASTER);
         double masterGain=master==null?1.0:project.automation.valueAt(Automation.target(master.id,"gain"),startFrame,master.get("gain",1.0));
         short[] out=new short[n];
