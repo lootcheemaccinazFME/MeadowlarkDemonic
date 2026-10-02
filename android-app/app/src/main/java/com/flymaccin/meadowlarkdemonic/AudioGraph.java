@@ -13,6 +13,8 @@ public final class AudioGraph {
  public synchronized Node addNode(String id,String type){if(nodes.containsKey(id))throw new IllegalArgumentException("Duplicate node "+id);Node n=new Node(id,type);nodes.put(id,n);return n;}
  public synchronized void connect(String from,String to){if(!nodes.containsKey(from)||!nodes.containsKey(to))throw new IllegalArgumentException("Unknown graph node");for(Edge e:edges)if(e.from.equals(from)&&e.to.equals(to))return;edges.add(new Edge(from,to));}
  public synchronized Node node(String id){return nodes.get(id);}
+ public synchronized void disconnect(String from,String to){for(Iterator<Edge> it=edges.iterator();it.hasNext();){Edge e=it.next();if(e.from.equals(from)&&e.to.equals(to))it.remove();}}
+ public synchronized void removeNode(String id){if(MASTER.equals(id))throw new IllegalArgumentException("Cannot remove master");nodes.remove(id);for(Iterator<Edge> it=edges.iterator();it.hasNext();){Edge e=it.next();if(e.from.equals(id)||e.to.equals(id))it.remove();}}
  public synchronized Collection<Node> nodes(){return Collections.unmodifiableCollection(nodes.values());}
  public synchronized List<Edge> edges(){return Collections.unmodifiableList(edges);}
  public synchronized JSONObject toJson(){try{JSONArray ns=new JSONArray(),es=new JSONArray();for(Node n:nodes.values())ns.put(n.toJson());for(Edge e:edges)es.put(e.toJson());return new JSONObject().put("nodes",ns).put("edges",es);}catch(Exception e){throw new IllegalStateException(e);}}
