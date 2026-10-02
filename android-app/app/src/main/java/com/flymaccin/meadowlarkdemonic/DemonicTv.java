@@ -52,6 +52,10 @@ public final class DemonicTv {
     public void pause(){if(state==State.PLAYING)state=State.PAUSED;}
     public void stop(){state=State.STOPPED;positionFrame=0;}
     public void seek(long frame){if(frame<0)throw new IllegalArgumentException("frame");positionFrame=frame;}
+    public void fastForward(long frames){if(frames<0)throw new IllegalArgumentException("frames");positionFrame+=frames;}
+    public void rewind(long frames){if(frames<0)throw new IllegalArgumentException("frames");positionFrame=Math.max(0,positionFrame-frames);}
+    public void fastForwardSeconds(int seconds){fastForward((long)Math.max(0,seconds)*project.transport.sampleRate());}
+    public void rewindSeconds(int seconds){rewind((long)Math.max(0,seconds)*project.transport.sampleRate());}
     public void advance(long frames){if(state==State.PLAYING)positionFrame=Math.max(0,positionFrame+frames);}
 
     public Asset next(){if(queueIndex+1>=queue.size())return null;queueIndex++;positionFrame=0;return current();}
