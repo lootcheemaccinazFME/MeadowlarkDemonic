@@ -20,6 +20,8 @@ public class MainActivity extends Activity{
   project=ProjectStore.loadOrCreate(this);
   showStudio();
  }
+ @Override protected void onPause(){super.onPause();if(project!=null)persist();}
+ @Override protected void onStop(){if(project!=null)persist();super.onStop();}
  @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
   super.onActivityResult(requestCode,resultCode,data);
   if(requestCode!=PICK_TV_MEDIA||resultCode!=RESULT_OK||data==null||data.getData()==null)return;
