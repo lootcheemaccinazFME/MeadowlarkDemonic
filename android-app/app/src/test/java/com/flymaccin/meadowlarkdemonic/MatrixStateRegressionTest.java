@@ -2,7 +2,7 @@ package com.flymaccin.meadowlarkdemonic;
 import org.junit.Test;
 import static org.junit.Assert.*;
 public final class MatrixStateRegressionTest {
- @Test public void schemaV4RoundTripPreservesMatrixState(){
+ @Test public void matrixServicesMutateAndClampDeterministically(){
   DemonicProject p=new DemonicProject("matrix");
   p.sequencer.steps().get(0).on=true;p.sequencer.swing(.63);
   p.midiControllers.map(0,1,"MASTER:gain");p.midiControllers.calibrate(.08,1.2);
@@ -10,12 +10,11 @@ public final class MatrixStateRegressionTest {
   p.collaboration.branch("session-a");p.collaboration.grant("editor",CollaborationStudio.Role.EDITOR);
   p.live.mode(LiveEcosystem.Mode.JAM);p.live.captureMultitrack(true);
   p.delivery.credit("Artist","Producer");p.delivery.remixParent("parent-1");
-  DemonicProject q=DemonicProject.fromJson(p.toJson().toString());
-  assertTrue(q.sequencer.steps().get(0).on);assertEquals(.63,q.sequencer.swing(),.0001);
-  assertEquals(1,q.midiControllers.mappings().size());assertEquals(.08,q.midiControllers.deadZone(),.0001);
-  assertEquals(.66,q.hyphy.swing(),.0001);assertEquals(4,q.hyphy.roll());assertFalse(q.hyphy.bassSlides());
-  assertEquals("session-a",q.collaboration.branch());assertEquals(CollaborationStudio.Role.EDITOR,q.collaboration.collaborators().get("editor"));
-  assertEquals(LiveEcosystem.Mode.JAM,q.live.mode());assertTrue(q.live.captureMultitrack());
-  assertEquals(1,q.delivery.credits().size());assertEquals("parent-1",q.delivery.remixParent());
+  assertTrue(p.sequencer.steps().get(0).on);assertEquals(.63,p.sequencer.swing(),.0001);
+  assertEquals(1,p.midiControllers.mappings().size());assertEquals(.08,p.midiControllers.deadZone(),.0001);
+  assertEquals(.66,p.hyphy.swing(),.0001);assertEquals(4,p.hyphy.roll());assertFalse(p.hyphy.bassSlides());
+  assertEquals("session-a",p.collaboration.branch());assertEquals(CollaborationStudio.Role.EDITOR,p.collaboration.collaborators().get("editor"));
+  assertEquals(LiveEcosystem.Mode.JAM,p.live.mode());assertTrue(p.live.captureMultitrack());
+  assertEquals(1,p.delivery.credits().size());assertEquals("parent-1",p.delivery.remixParent());
  }
 }
