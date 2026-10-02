@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import java.util.*;
 
 public final class DemonicProject {
- public static final int SCHEMA_VERSION=2;
+ public static final int SCHEMA_VERSION=3;
  public final String id; public String name;
  public final Transport transport; public final AudioGraph audioGraph; public final UndoHistory history=new UndoHistory();
  private final ArrayList<Asset> assets=new ArrayList<>();
@@ -28,6 +28,6 @@ public final class DemonicProject {
  private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
  private void requireAsset(String id){for(Asset a:assets)if(a.id.equals(id))return;throw new IllegalArgumentException("Unknown asset "+id);}
 
- public JSONObject toJson(){try{JSONArray aa=new JSONArray(),tt=new JSONArray(),cc=new JSONArray();for(Asset a:assets)aa.put(a.toJson());for(Track t:tracks)tt.put(t.toJson());for(Clip c:clips)cc.put(c.toJson());return new JSONObject().put("schemaVersion",SCHEMA_VERSION).put("id",id).put("name",name).put("transport",transport.toJson()).put("audioGraph",audioGraph.toJson()).put("assets",aa).put("tracks",tt).put("clips",cc);}catch(Exception e){throw new IllegalStateException("Project serialization failed",e);}}
- public static DemonicProject fromJson(String raw){try{JSONObject o=new JSONObject(raw);DemonicProject p=new DemonicProject(o.getString("id"),o.optString("name","Demonic Project"),Transport.fromJson(o.optJSONObject("transport")),AudioGraph.fromJson(o.optJSONObject("audioGraph")));JSONArray a=o.optJSONArray("assets");if(a!=null)for(int i=0;i<a.length();i++)p.assets.add(Asset.fromJson(a.getJSONObject(i)));JSONArray t=o.optJSONArray("tracks");if(t!=null)for(int i=0;i<t.length();i++)p.tracks.add(Track.fromJson(t.getJSONObject(i)));JSONArray c=o.optJSONArray("clips");if(c!=null)for(int i=0;i<c.length();i++)p.clips.add(Clip.fromJson(c.getJSONObject(i)));return p;}catch(Exception e){throw new IllegalArgumentException("Invalid Demonic project",e);}}
+ public JSONObject toJson(){try{JSONArray aa=new JSONArray(),tt=new JSONArray(),cc=new JSONArray();for(Asset a:assets)aa.put(a.toJson());for(Track t:tracks)tt.put(t.toJson());for(Clip c:clips)cc.put(c.toJson());return new JSONObject().put("schemaVersion",SCHEMA_VERSION).put("id",id).put("name",name).put("transport",transport.toJson()).put("audioGraph",audioGraph.toJson()).put("assets",aa).put("tracks",tt).put("clips",cc).put("automation",automation.toJson()).put("mediaTransforms",mediaEditor.toJson());}catch(Exception e){throw new IllegalStateException("Project serialization failed",e);}}
+ public static DemonicProject fromJson(String raw){try{JSONObject o=new JSONObject(raw);DemonicProject p=new DemonicProject(o.getString("id"),o.optString("name","Demonic Project"),Transport.fromJson(o.optJSONObject("transport")),AudioGraph.fromJson(o.optJSONObject("audioGraph")));JSONArray a=o.optJSONArray("assets");if(a!=null)for(int i=0;i<a.length();i++)p.assets.add(Asset.fromJson(a.getJSONObject(i)));JSONArray t=o.optJSONArray("tracks");if(t!=null)for(int i=0;i<t.length();i++)p.tracks.add(Track.fromJson(t.getJSONObject(i)));JSONArray c=o.optJSONArray("clips");if(c!=null)for(int i=0;i<c.length();i++)p.clips.add(Clip.fromJson(c.getJSONObject(i)));p.automation.loadJson(o.optJSONArray("automation"));p.mediaEditor.loadJson(o.optJSONObject("mediaTransforms"));return p;}catch(Exception e){throw new IllegalArgumentException("Invalid Demonic project",e);}}
 }
