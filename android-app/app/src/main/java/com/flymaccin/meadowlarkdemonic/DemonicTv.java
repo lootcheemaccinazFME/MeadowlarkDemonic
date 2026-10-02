@@ -13,6 +13,8 @@ public final class DemonicTv {
     private long positionFrame = 0;
     private Surface surface = Surface.IN_APP;
     private State state = State.STOPPED;
+    private boolean poweredOn = true;
+    private float volume = 1.0f;
 
     public DemonicTv(DemonicProject project) { this.project = project; }
 
@@ -20,6 +22,8 @@ public final class DemonicTv {
     public State state() { return state; }
     public long positionFrame() { return positionFrame; }
     public List<String> queue() { return Collections.unmodifiableList(queue); }
+    public boolean poweredOn(){return poweredOn;}
+    public float volume(){return volume;}
 
     public Asset current() {
         return queueIndex >= 0 && queueIndex < queue.size() ? project.asset(queue.get(queueIndex)) : null;
@@ -48,7 +52,7 @@ public final class DemonicTv {
         queueIndex=i; state=State.PLAYING;
     }
 
-    public void play(){if(current()==null)throw new IllegalStateException("No TV asset");state=State.PLAYING;}
+    public void play(){if(!poweredOn)throw new IllegalStateException("TV power off");if(current()==null)throw new IllegalStateException("No TV asset");state=State.PLAYING;}
     public void pause(){if(state==State.PLAYING)state=State.PAUSED;}
     public void stop(){state=State.STOPPED;positionFrame=0;}
     public void seek(long frame){if(frame<0)throw new IllegalArgumentException("frame");positionFrame=frame;}
@@ -60,6 +64,11 @@ public final class DemonicTv {
 
     public Asset next(){if(queueIndex+1>=queue.size())return null;queueIndex++;positionFrame=0;return current();}
     public Asset previous(){if(queueIndex<=0)return null;queueIndex--;positionFrame=0;return current();}
+    public Asset channelUp(){return next();}
+    public Asset channelDown(){return previous();}
+    public float volumeUp(){volume=Math.min(1f,volume+0.05f);return volume;}
+    public float volumeDown(){volume=Math.max(0f,volume-0.05f);return volume;}
+    public boolean togglePower(){poweredOn=!poweredOn;if(!poweredOn)state=State.PAUSED;return poweredOn;}
 
     /** Lifecycle snapshot used when Android recreates a viewing surface. */
     public Session snapshot(){return new Session(current()==null?null:current().id,positionFrame,state,surface,queue,queueIndex);}
