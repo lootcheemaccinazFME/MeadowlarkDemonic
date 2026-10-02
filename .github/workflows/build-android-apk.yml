@@ -17,17 +17,20 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - name: Generate pinned Gradle wrapper
+        run: gradle wrapper --gradle-version 8.10.2
+        working-directory: android-app
       - name: Unit tests
-        run: gradle :app:testDebugUnitTest --stacktrace
+        run: ./gradlew :app:testDebugUnitTest :core-midi:testDebugUnitTest :core-sequencer:testDebugUnitTest --stacktrace
         working-directory: android-app
       - name: Android lint
-        run: gradle :app:lintDebug --stacktrace
+        run: ./gradlew :app:lintDebug :core-midi:lintDebug :core-sequencer:lintDebug --stacktrace
         working-directory: android-app
       - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace
         working-directory: android-app
       - name: Build unsigned release APK
-        run: gradle :app:assembleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease --stacktrace
         working-directory: android-app
       - name: Validate APKs
         run: test -s app/build/outputs/apk/debug/app-debug.apk && test -s app/build/outputs/apk/release/app-release-unsigned.apk
