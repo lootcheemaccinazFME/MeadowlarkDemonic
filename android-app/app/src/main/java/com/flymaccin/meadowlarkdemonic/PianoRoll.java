@@ -82,6 +82,37 @@ public final class PianoRoll {
         });
     }
 
+    public List<Note> editNotes(final String assetId,final List<Note> notes,final long deltaFrame,final int deltaPitch){
+        if(notes==null||notes.isEmpty())return Collections.emptyList();
+        final Asset a=midi(assetId);final ArrayList<Note> replacements=new ArrayList<>();
+        for(Note n:notes){
+            long start=Math.max(0,n.startFrame()+deltaFrame);int pitch=Math.max(0,Math.min(127,n.pitch()+deltaPitch));
+            replacements.add(new Note(new MidiEvent(start,0x90,pitch,n.velocity()),new MidiEvent(start+n.durationFrames(),0x80,pitch,0)));
+        }
+        project.history.execute(new UndoHistory.Command(){
+            public void apply(){for(int i=0;i<notes.size();i++){Note old=notes.get(i),neu=replacements.get(i);a.replaceMidiEventInternal(old.on,neu.on);a.replaceMidiEventInternal(old.off,neu.off);}}
+            public void revert(){for(int i=notes.size()-1;i>=0;i--){Note old=notes.get(i),neu=replacements.get(i);a.replaceMidiEventInternal(neu.on,old.on);a.replaceMidiEventInternal(neu.off,old.off);}}
+            public String label(){return "Edit MIDI notes";}
+        });
+        return Collections.unmodifiableList(replacements);
+    }
+
+    public void removeNotes(final String assetId,final List<Note> notes){
+        if(notes==null||notes.isEmpty())return;final Asset a=midi(assetId);
+        project.history.execute(new UndoHistory.Command(){
+            public void apply(){for(Note n:notes){a.removeMidiEventInternal(n.on);a.removeMidiEventInternal(n.off);}}
+            public void revert(){for(Note n:notes){a.addMidiEventInternal(n.on);a.addMidiEventInternal(n.off);}}
+            public String label(){return "Remove MIDI notes";}
+        });
+    }
+
+    public List<Note> quantizeNotes(String assetId,List<Note> notes,int divisionsPerBeat){
+        if(notes==null||notes.isEmpty())return Collections.emptyList();
+        long q=project.grid.framesForDivision(divisionsPerBeat);ArrayList<Note> out=new ArrayList<>();
+        for(Note n:notes){long snapped=Math.max(0,Math.round((double)n.startFrame()/q)*q);out.addAll(editNotes(assetId,Collections.singletonList(n),snapped-n.startFrame(),0));}
+        return Collections.unmodifiableList(out);
+    }
+
     private Asset midi(String id){
         Asset a=project.asset(id);
         if(a==null||a.kind!=Asset.Kind.MIDI)throw new IllegalArgumentException("MIDI asset required");
