@@ -20,6 +20,7 @@ public final class AddOnWorkspaceJson {
    o.put("samplerPads",pads).put("vocalTakes",takes).put("stems",stems);
    o.put("mastering",new JSONObject().put("targetLufs",w.mastering.targetLufs).put("ceilingDb",w.mastering.ceilingDb).put("referenceAssetId",w.mastering.referenceAssetId));
    o.put("timePitch",new JSONObject().put("sourceBpm",w.timePitch.sourceBpm).put("targetBpm",w.timePitch.targetBpm).put("semitones",w.timePitch.semitones));
+   o.put("extras",AddOnWorkspaceExtrasJson.toJson(w));
    return o;
   }catch(Exception e){throw new IllegalStateException("Add-on serialization failed",e);}
  }
@@ -31,5 +32,6 @@ public final class AddOnWorkspaceJson {
   JSONArray stems=o.optJSONArray("stems");if(stems!=null)for(int i=0;i<stems.length();i++){JSONObject x=stems.optJSONObject(i);if(x==null)continue;DemonicAddOnSuite.Stem s=new DemonicAddOnSuite.Stem(x.optString("name","Stem"),x.optString("assetId",""));s.gain=(float)x.optDouble("gain",1);s.pan=(float)x.optDouble("pan",0);s.muted=x.optBoolean("muted",false);s.solo=x.optBoolean("solo",false);w.stems.stems.add(s);}
   JSONObject m=o.optJSONObject("mastering");if(m!=null){w.mastering.targetLufs=(float)m.optDouble("targetLufs",-14);w.mastering.ceilingDb=(float)m.optDouble("ceilingDb",-1);w.mastering.referenceAssetId=m.optString("referenceAssetId",null);}
   JSONObject t=o.optJSONObject("timePitch");if(t!=null){w.timePitch.sourceBpm=t.optDouble("sourceBpm",120);w.timePitch.targetBpm=t.optDouble("targetBpm",120);w.timePitch.semitones=t.optDouble("semitones",0);}
+  AddOnWorkspaceExtrasJson.load(o.optJSONObject("extras"),w);
  }
 }
