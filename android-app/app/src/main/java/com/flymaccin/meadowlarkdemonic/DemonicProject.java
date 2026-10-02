@@ -11,10 +11,10 @@ public final class DemonicProject {
  private final ArrayList<Asset> assets=new ArrayList<>();
  private final ArrayList<Track> tracks=new ArrayList<>();
  private final ArrayList<Clip> clips=new ArrayList<>();
- public final Timeline timeline; public final ClipEngine clipEngine; public final Mixer mixer; public final InstrumentRack instruments; public final RecordingEngine recording; public final Arrangement arrangement; public final Automation automation; public final MaestroBridge maestro; public final AiAssetIngestion ai; public final Director director;
+ public final Timeline timeline; public final ClipEngine clipEngine; public final Mixer mixer; public final InstrumentRack instruments; public final RecordingEngine recording; public final Arrangement arrangement; public final Automation automation; public final MaestroBridge maestro; public final AiAssetIngestion ai; public final Director director; public final MediaEditor mediaEditor;
 
  public DemonicProject(String name){this(UUID.randomUUID().toString(),name,new Transport(),new AudioGraph());}
- private DemonicProject(String id,String name,Transport transport,AudioGraph graph){this.id=id;this.name=name;this.transport=transport;this.audioGraph=graph;this.timeline=new Timeline(this);this.clipEngine=new ClipEngine(this);this.mixer=new Mixer(this);this.instruments=new InstrumentRack(this);this.recording=new RecordingEngine(this);this.arrangement=new Arrangement(this);this.automation=new Automation(this);this.maestro=new MaestroBridge(this);this.ai=new AiAssetIngestion(this);this.director=new Director(this);}
+ private DemonicProject(String id,String name,Transport transport,AudioGraph graph){this.id=id;this.name=name;this.transport=transport;this.audioGraph=graph;this.timeline=new Timeline(this);this.clipEngine=new ClipEngine(this);this.mixer=new Mixer(this);this.instruments=new InstrumentRack(this);this.recording=new RecordingEngine(this);this.arrangement=new Arrangement(this);this.automation=new Automation(this);this.maestro=new MaestroBridge(this);this.ai=new AiAssetIngestion(this);this.director=new Director(this);this.mediaEditor=new MediaEditor(this);}
  public List<Asset> assets(){return Collections.unmodifiableList(assets);}
  public List<Track> tracks(){return Collections.unmodifiableList(tracks);}
  public List<Clip> clips(){return Collections.unmodifiableList(clips);}
