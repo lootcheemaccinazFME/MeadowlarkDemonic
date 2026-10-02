@@ -30,34 +30,39 @@ jobs:
         run: ./gradlew :app:assembleDebug --stacktrace
         working-directory: android-app
       - name: Build unsigned release APK
-        run: ./gradlew :app:assembleRelease --stacktrace
+        shell: bash
+        run: |
+          if [ -z "$FME_KEYSTORE_BASE64" ]; then exit 0; fi
+          ./gradlew :app:assembleRelease --stacktrace
         working-directory: android-app
       - name: Validate unsigned artifacts
         run: test -s app/build/outputs/apk/debug/app-debug.apk && test -s app/build/outputs/apk/release/app-release-unsigned.apk
         working-directory: android-app
       - name: Materialize production keystore
-        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
         shell: bash
         env:
           FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
         run: |
+          if [ -z "$FME_KEYSTORE_BASE64" ]; then exit 0; fi
           umask 077
           printf '%s' "$FME_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/fme-release.jks"
           test -s "$RUNNER_TEMP/fme-release.jks"
       - name: Build production-signed APK
-        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
         working-directory: android-app
         env:
+          FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
           FME_KEYSTORE_PATH: ${{ runner.temp }}/fme-release.jks
           FME_KEYSTORE_PASSWORD: ${{ secrets.FME_KEYSTORE_PASSWORD }}
           FME_KEY_ALIAS: ${{ secrets.FME_KEY_ALIAS }}
           FME_KEY_PASSWORD: ${{ secrets.FME_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --stacktrace
       - name: Verify production APK signature
-        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
         shell: bash
         working-directory: android-app
+        env:
+          FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
         run: |
+          if [ -z "$FME_KEYSTORE_BASE64" ]; then exit 0; fi
           APK="app/build/outputs/apk/release/app-release.apk"
           test -s "$APK"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
