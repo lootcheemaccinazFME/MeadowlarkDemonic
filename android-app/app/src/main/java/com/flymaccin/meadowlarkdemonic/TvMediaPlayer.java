@@ -60,6 +60,28 @@ public final class TvMediaPlayer implements MediaPlayer.OnCompletionListener {
         if(player!=null) player.seekTo((int)Math.min(Integer.MAX_VALUE,framesToMillis(frame)));
     }
 
+    public boolean previous() throws IOException {
+        syncPosition();
+        Asset previous=project.tv.previous();
+        if(previous==null)return false;
+        loadCurrent();
+        play();
+        return true;
+    }
+
+    public void restart() {
+        seekFrame(0);
+    }
+
+    public boolean next() throws IOException {
+        syncPosition();
+        Asset next=project.tv.next();
+        if(next==null)return false;
+        loadCurrent();
+        play();
+        return true;
+    }
+
     public void fastForwardSeconds(int seconds) { syncPosition(); project.tv.fastForwardSeconds(seconds); seekFrame(project.tv.positionFrame()); }
 
     public void rewindSeconds(int seconds) { syncPosition(); project.tv.rewindSeconds(seconds); seekFrame(project.tv.positionFrame()); }
