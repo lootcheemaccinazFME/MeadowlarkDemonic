@@ -2,9 +2,10 @@ package com.flymaccin.meadowlarkdemonic;
 import org.json.*; import java.util.*;
 public final class Asset{
  public enum Kind{AUDIO,MIDI,IMAGE,VIDEO}
- public final String id;public final Kind kind;public final String uri;public final String name;private final ArrayList<MidiEvent> midi=new ArrayList<>();
+ public final String id;public final Kind kind;public String uri;public final String name;private final ArrayList<MidiEvent> midi=new ArrayList<>();
  public Asset(Kind kind,String uri,String name){this(UUID.randomUUID().toString(),kind,uri,name);}
  private Asset(String id,Kind kind,String uri,String name){this.id=id;this.kind=kind;this.uri=uri;this.name=name;}
+ public void relink(String newUri){if(newUri==null||newUri.trim().isEmpty())throw new IllegalArgumentException("uri");uri=newUri;}
  public Asset addMidiEvent(MidiEvent e){if(kind!=Kind.MIDI)throw new IllegalStateException("Not MIDI");midi.add(e);return this;}
  public List<MidiEvent> midiEvents(){return Collections.unmodifiableList(midi);}
  void addMidiEventInternal(MidiEvent e){if(kind!=Kind.MIDI)throw new IllegalStateException("Not MIDI");midi.add(e);Collections.sort(midi,(a,b)->Long.compare(a.frame,b.frame));}
