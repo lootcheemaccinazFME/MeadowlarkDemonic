@@ -20,16 +20,15 @@ public final class AudioRuntime {
     public short[] render(long startFrame,int frames){
         if(frames<1)return new short[0];
         int n=frames*2;int[] mix=new int[n];
-        project.automation.applyAt(startFrame);
         for(ClipEngine.PlaybackSlice slice:project.clipEngine.slices(startFrame,frames)){
             if(slice.asset.kind!=Asset.Kind.AUDIO)continue;
             int count=(int)Math.min(Integer.MAX_VALUE,slice.frames);
             short[] pcm=new short[count*2];
             decoder.decode(slice.asset,slice.sourceFrame,count,pcm);
             AudioGraph.Node node=project.audioGraph.node(slice.track.graphNodeId);
-            double gain=node==null?1.0:node.get("gain",1.0);
-            double pan=node==null?0.0:Math.max(-1.0,Math.min(1.0,node.get("pan",0.0)));
-            boolean mute=node!=null&&node.get("mute",0.0)>=0.5;
+            double gain=node==null?1.0:project.automation.valueAt(Automation.target(node.id,"gain"),startFrame,node.get("gain",1.0));
+            double pan=node==null?0.0:Math.max(-1.0,Math.min(1.0,project.automation.valueAt(Automation.target(node.id,"pan"),startFrame,node.get("pan",0.0))));
+            boolean mute=node!=null&&project.automation.valueAt(Automation.target(node.id,"mute"),startFrame,node.get("mute",0.0))>=0.5;
             if(mute)continue;
             double left=gain*(pan>0?1.0-pan:1.0),right=gain*(pan<0?1.0+pan:1.0);
             int offset=(int)(slice.timelineFrame-startFrame);
@@ -40,7 +39,7 @@ public final class AudioRuntime {
             }
         }
         AudioGraph.Node master=project.audioGraph.node(AudioGraph.MASTER);
-        double masterGain=master==null?1.0:master.get("gain",1.0);
+        double masterGain=master==null?1.0:project.automation.valueAt(Automation.target(master.id,"gain"),startFrame,master.get("gain",1.0));
         short[] out=new short[n];
         for(int i=0;i<n;i++){long v=Math.round(mix[i]*masterGain);out[i]=(short)Math.max(Short.MIN_VALUE,Math.min(Short.MAX_VALUE,v));}
         return out;
