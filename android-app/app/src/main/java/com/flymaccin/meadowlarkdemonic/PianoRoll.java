@@ -38,6 +38,50 @@ public final class PianoRoll {
         });
     }
 
+    public static final class Note {
+        public final MidiEvent on,off;
+        Note(MidiEvent on,MidiEvent off){this.on=on;this.off=off;}
+        public long startFrame(){return on.frame;}
+        public long durationFrames(){return Math.max(1,off.frame-on.frame);}
+        public int pitch(){return on.data1;}
+        public int velocity(){return on.data2;}
+    }
+
+    public Note addNote(final String assetId,long start,long duration,int pitch,int velocity){
+        if(duration<1)throw new IllegalArgumentException("duration");
+        final Asset a=midi(assetId);
+        final MidiEvent on=new MidiEvent(start,0x90,pitch,velocity);
+        final MidiEvent off=new MidiEvent(start+duration,0x80,pitch,0);
+        project.history.execute(new UndoHistory.Command(){
+            public void apply(){a.addMidiEventInternal(on);a.addMidiEventInternal(off);}
+            public void revert(){a.removeMidiEventInternal(on);a.removeMidiEventInternal(off);}
+            public String label(){return "Add MIDI note";}
+        });
+        return new Note(on,off);
+    }
+
+    public Note editNote(final String assetId,final Note note,long start,long duration,int pitch,int velocity){
+        if(duration<1)throw new IllegalArgumentException("duration");
+        final Asset a=midi(assetId);
+        final MidiEvent newOn=new MidiEvent(start,0x90,pitch,velocity);
+        final MidiEvent newOff=new MidiEvent(start+duration,0x80,pitch,0);
+        project.history.execute(new UndoHistory.Command(){
+            public void apply(){a.replaceMidiEventInternal(note.on,newOn);a.replaceMidiEventInternal(note.off,newOff);}
+            public void revert(){a.replaceMidiEventInternal(newOn,note.on);a.replaceMidiEventInternal(newOff,note.off);}
+            public String label(){return "Edit MIDI note";}
+        });
+        return new Note(newOn,newOff);
+    }
+
+    public void removeNote(final String assetId,final Note note){
+        final Asset a=midi(assetId);
+        project.history.execute(new UndoHistory.Command(){
+            public void apply(){a.removeMidiEventInternal(note.on);a.removeMidiEventInternal(note.off);}
+            public void revert(){a.addMidiEventInternal(note.on);a.addMidiEventInternal(note.off);}
+            public String label(){return "Remove MIDI note";}
+        });
+    }
+
     private Asset midi(String id){
         Asset a=project.asset(id);
         if(a==null||a.kind!=Asset.Kind.MIDI)throw new IllegalArgumentException("MIDI asset required");
