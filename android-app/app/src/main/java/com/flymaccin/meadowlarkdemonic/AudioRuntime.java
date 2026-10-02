@@ -20,12 +20,15 @@ public final class AudioRuntime {
     public short[] render(long startFrame,int frames){
         if(frames<1)return new short[0];
         int n=frames*2;int[] mix=new int[n];
+        boolean anySolo=false;
+        for(Track t:project.tracks()){AudioGraph.Node ch=project.audioGraph.node(t.graphNodeId);if(ch!=null&&ch.get("solo",0.0)>=0.5){anySolo=true;break;}}
         for(ClipEngine.PlaybackSlice slice:project.clipEngine.slices(startFrame,frames)){
             if(slice.asset.kind!=Asset.Kind.AUDIO)continue;
             int count=(int)Math.min(Integer.MAX_VALUE,slice.frames);
             short[] pcm=new short[count*2];
             decoder.decode(slice.asset,slice.sourceFrame,count,pcm);
             AudioGraph.Node node=project.audioGraph.node(slice.track.graphNodeId);
+            if(anySolo&&(node==null||node.get("solo",0.0)<0.5))continue;
             double gain=node==null?1.0:project.automation.valueAt(Automation.target(node.id,"gain"),startFrame,node.get("gain",1.0));
             double pan=node==null?0.0:Math.max(-1.0,Math.min(1.0,project.automation.valueAt(Automation.target(node.id,"pan"),startFrame,node.get("pan",0.0))));
             boolean mute=node!=null&&project.automation.valueAt(Automation.target(node.id,"mute"),startFrame,node.get("mute",0.0))>=0.5;
