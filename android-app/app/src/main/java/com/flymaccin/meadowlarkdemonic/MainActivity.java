@@ -11,7 +11,7 @@ import android.view.*;
 import android.widget.*;
 
 public class MainActivity extends Activity{
- int gold=Color.rgb(214,179,90),panel=Color.rgb(24,24,31),white=Color.rgb(240,240,244),muted=Color.rgb(145,145,155),green=Color.rgb(80,200,130);
+ int gold=Color.rgb(235,187,67),panel=Color.rgb(10,18,26),white=Color.rgb(240,240,244),muted=Color.rgb(145,145,155),green=Color.rgb(34,221,108),red=Color.rgb(235,25,38),deepRed=Color.rgb(92,8,12),black=Color.rgb(4,7,10);
  DemonicProject project; String workspace="HOME";
  static final int PICK_TV_MEDIA=4401;
 
@@ -58,7 +58,7 @@ public class MainActivity extends Activity{
   p.addView(t("UNIFIED WORKSPACES",14,gold));
   LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.VERTICAL);
   for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","MIX","MAESTRO / AI","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){
-   Button x=button(s);x.setOnClickListener(v->{workspace=s;showStudio();});nav.addView(x);
+   Button x=s.equals(workspace)?activeButton(s):button(s);x.setOnClickListener(v->{workspace=s;showStudio();});nav.addView(x);
   }
   p.addView(nav);
   p.addView(t("WORKSPACE · "+workspace,18,gold));
@@ -87,11 +87,11 @@ public class MainActivity extends Activity{
   }else if("COMPOSE / MIDI".equals(workspace)){
    p.addView(t("Grid: 1/4 beat · "+project.grid.framesForDivision(4)+" frames · Metronome "+(project.metronome.enabled()?"ON":"OFF"),12,green));
   }else if("TV".equals(workspace)){
-   p.addView(t("DEMONIC TV",20,gold));
+   p.addView(t("🔥  DEMONIC TV",20,white));
    LinearLayout tabs=new LinearLayout(this);tabs.setOrientation(LinearLayout.HORIZONTAL);
-   for(String label:new String[]{"LIVE TV","BROWSER / TV","IMPORT FILE","PLAYLISTS","FAVORITES","SETTINGS"}){Button b=button(label);if("IMPORT FILE".equals(label))b.setOnClickListener(v->importTvFile());else if("LIVE TV".equals(label)||"BROWSER / TV".equals(label))b.setOnClickListener(v->showLiveTvDialog());tabs.addView(b);}p.addView(tabs);
-   p.addView(t("CHANNELS · All Channels · Local · News · Movies · Kids · Music · International",12,muted));
-   Button live=button("ADD / PLAY FREE LIVE CHANNEL");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
+   for(String label:new String[]{"LIVE TV","BROWSER / TV","IMPORT FILE","PLAYLISTS","FAVORITES","SETTINGS"}){Button b="LIVE TV".equals(label)?activeButton(label):button(label);if("IMPORT FILE".equals(label))b.setOnClickListener(v->importTvFile());else if("LIVE TV".equals(label)||"BROWSER / TV".equals(label))b.setOnClickListener(v->showLiveTvDialog());tabs.addView(b);}p.addView(tabs);
+   p.addView(t("CHANNELS",13,gold));p.addView(t("▣ All Channels    ▣ Local    ▣ News    ▣ Movies    ▣ Kids    ▣ Music    ▣ International",11,white));
+   Button live=activeButton("+  ADD / PLAY FREE LIVE CHANNEL");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
    if(!project.tv.liveChannels().isEmpty()){p.addView(t("LIVE CHANNELS",13,gold));for(int i=0;i<project.tv.liveChannels().size();i++){final int channel=i;DemonicTv.LiveChannel ch=project.tv.liveChannels().get(i);Button cb=button(String.format("%02d  %s  (Live)",i+1,ch.name));cb.setOnClickListener(v->{project.tv.playLiveChannel(channel);persist();showStudio();});p.addView(cb);}}
    Asset current=project.tv.current();p.addView(t(current==null?"No TV media loaded":"NOW PLAYING · "+current.name,12,green));
    LinearLayout tvc=new LinearLayout(this);tvc.setOrientation(LinearLayout.HORIZONTAL);
@@ -100,7 +100,7 @@ public class MainActivity extends Activity{
    Button stopTv=button("STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);
    Button fs=button("FULLSCREEN");fs.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.FULLSCREEN);persist();showStudio();});tvc.addView(fs);
    Button pip=button("PICTURE IN PICTURE");pip.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.PICTURE_IN_PICTURE);persist();showStudio();});tvc.addView(pip);p.addView(tvc);
-   p.addView(t("GUIDE · AUDIO TRACK · SUBTITLES · CHANNEL MANAGEMENT",12,muted));
+   p.addView(t("＋ Add Channel   ▣ Import File   ☰ Manage Channels   ▤ EPG / Guide   ⛶ Fullscreen   ◫ Picture in Picture   ♫ Audio Track   CC Subtitles   ⚙ Settings",11,muted));
   }else if("IMAGE / VIDEO".equals(workspace)){
    Clip media=null;for(Clip cl:project.clips()){Asset a=project.asset(cl.assetId);if(a!=null&&(a.kind==Asset.Kind.IMAGE||a.kind==Asset.Kind.VIDEO)){media=cl;break;}}
    final Clip mc=media;
