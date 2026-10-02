@@ -33,7 +33,7 @@ public class MainActivity extends Activity{
  String displayName(Uri uri){String name="Imported TV Media";Cursor cur=null;try{cur=getContentResolver().query(uri,null,null,null,null);if(cur!=null&&cur.moveToFirst()){int i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)name=cur.getString(i);}}finally{if(cur!=null)cur.close();}return name;}
  void importTvFile(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"video/*","audio/*"});i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(i,PICK_TV_MEDIA);}
  TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(18,12,18,12);return v;}
- Button button(String s){Button x=new Button(this);x.setText(s);x.setTextColor(white);x.setBackgroundColor(panel);return x;}
+ Button button(String s){Button x=new Button(this);x.setText(s);x.setTextColor(white);x.setBackgroundColor(panel);return x;}\n Button activeButton(String s){Button x=button(s);x.setTextColor(gold);x.setBackgroundColor(Color.rgb(70,8,12));return x;}
  Button activeButton(String s){Button x=button(s);x.setTextColor(Color.WHITE);x.setBackgroundColor(deepRed);return x;}
  void persist(){ProjectStore.save(this,project);}
 
