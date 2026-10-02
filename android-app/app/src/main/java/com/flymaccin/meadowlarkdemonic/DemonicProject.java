@@ -21,6 +21,8 @@ public final class DemonicProject {
  public Asset addAsset(Asset a){assets.add(a);return a;}
  public Track addTrack(Track t){tracks.add(t);if(t.kind==Track.Kind.AUDIO||t.kind==Track.Kind.MIDI){audioGraph.addNode(t.graphNodeId,"TRACK_"+t.kind.name());audioGraph.connect(t.graphNodeId,AudioGraph.MASTER);}return t;}
  public Clip addClip(Clip c){requireTrack(c.trackId);requireAsset(c.assetId);clips.add(c);return c;}
+ void removeClipInternal(Clip c){clips.remove(c);}
+ void restoreClipInternal(Clip c){requireTrack(c.trackId);requireAsset(c.assetId);if(!clips.contains(c))clips.add(c);}
  public Track track(String id){for(Track t:tracks)if(t.id.equals(id))return t;return null;}
  public Asset asset(String id){for(Asset a:assets)if(a.id.equals(id))return a;return null;}
  private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
