@@ -9,6 +9,7 @@ public final class DemonicTv {
 
     private final DemonicProject project;
     private final ArrayList<String> queue = new ArrayList<>();
+    private final ArrayList<LiveChannel> liveChannels = new ArrayList<>();
     private int queueIndex = -1;
     private long positionFrame = 0;
     private Surface surface = Surface.IN_APP;
@@ -24,6 +25,10 @@ public final class DemonicTv {
     public List<String> queue() { return Collections.unmodifiableList(queue); }
     public boolean poweredOn(){return poweredOn;}
     public float volume(){return volume;}
+    public List<LiveChannel> liveChannels(){return Collections.unmodifiableList(liveChannels);}
+    public void addLiveChannel(String name,String streamUrl){if(name==null||name.trim().isEmpty()||streamUrl==null||streamUrl.trim().isEmpty())throw new IllegalArgumentException("channel");liveChannels.add(new LiveChannel(name.trim(),streamUrl.trim()));}
+    public Asset playLiveChannel(int index){if(index<0||index>=liveChannels.size())throw new IllegalArgumentException("channel");LiveChannel ch=liveChannels.get(index);Asset a=new Asset(Asset.Kind.VIDEO,ch.streamUrl,ch.name);project.addAssetUndoable(a);play(a.id);return a;}
+    public static final class LiveChannel { public final String name,streamUrl; LiveChannel(String n,String u){name=n;streamUrl=u;} }
 
     public Asset current() {
         return queueIndex >= 0 && queueIndex < queue.size() ? project.asset(queue.get(queueIndex)) : null;
