@@ -6,6 +6,7 @@ public final class RepairDsp {
  public static void apply(short[] pcm,DemonicAddOnSuite.RepairPlan p,int sampleRate){
   if(pcm==null||p==null||pcm.length<2)return;
   if(p.dehum)notchHum(pcm,Math.max(8000,sampleRate),Math.max(20,p.humHz));
+  if(p.declick)DeclickDsp.apply(pcm,1f);
   if(p.trimSilence)gateSilence(pcm,0.0015);
   if(p.normalize)normalize(pcm,p.normalizePeakDb);
  }
