@@ -59,7 +59,14 @@ public class MainActivity extends Activity{
   sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
  }
  void addWorkspaceControls(LinearLayout p,TextView status){
-  if("ARRANGE".equals(workspace)){
+  if("HOME".equals(workspace)){
+   p.addView(t("COMMAND CENTER",16,gold));
+   LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
+   LinearLayout daw=panelBox();daw.addView(t("DEMONIC DAW",14,red));daw.addView(t(project.tracks().size()+" tracks · "+project.clips().size()+" clips",11,white));Button openDaw=activeButton("OPEN DAW");openDaw.setOnClickListener(v->{workspace="ARRANGE";showStudio();});daw.addView(openDaw);row.addView(daw,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));
+   LinearLayout tv=panelBox();tv.addView(t("DEMONIC TV",14,red));tv.addView(t(project.tv.liveChannels().size()+" channels · "+project.tv.selectedCategory(),11,white));Button openTv=activeButton("OPEN TV");openTv.setOnClickListener(v->{workspace="TV";showStudio();});tv.addView(openTv);row.addView(tv,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));p.addView(row);
+   LinearLayout modules=new LinearLayout(this);modules.setOrientation(LinearLayout.HORIZONTAL);
+   for(String s:new String[]{"VISUAL / BROWSER","UNIVERSAL EMULATOR","FME GAMES","AI VIDEO","FME AGENT"}){LinearLayout card=panelBox();card.addView(t(s,11,gold));card.addView(t("FME MODULE",10,muted));modules.addView(card,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));}p.addView(modules);
+  }else if("ARRANGE".equals(workspace)){
    LinearLayout r=new LinearLayout(this);r.setOrientation(LinearLayout.HORIZONTAL);
    Button undo=button("UNDO");undo.setOnClickListener(v->{project.history.undo();persist();showStudio();});r.addView(undo);
    Button redo=button("REDO");redo.setOnClickListener(v->{project.history.redo();persist();showStudio();});r.addView(redo);p.addView(r);
