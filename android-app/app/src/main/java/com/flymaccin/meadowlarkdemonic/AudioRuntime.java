@@ -69,6 +69,7 @@ public final class AudioRuntime {
         double masterGain=master==null?1.0:project.automation.valueAt(Automation.target(master.id,"gain"),startFrame,master.get("gain",1.0));
         short[] out=new short[n];
         for(int i=0;i<n;i++){long v=Math.round(mix[i]*masterGain);out[i]=(short)Math.max(Short.MIN_VALUE,Math.min(Short.MAX_VALUE,v));}
+        MeterAnalyzer.analyze(out,project.addOns.meters);
         return out;
     }
 
