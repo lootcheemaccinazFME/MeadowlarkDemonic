@@ -14,7 +14,7 @@ public final class UnifiedDemonicDaw {
   if(project.production.vault()!=project.addOns.vault)throw new IllegalStateException("Vault split");
   if(project.production.live()!=project.addOns.live)throw new IllegalStateException("Live split");
   if(project.production.rack()!=project.addOns.universalRack)throw new IllegalStateException("Rack split");
-  if(project.audioGraph==null||project.transport==null||project.timeline==null||project.mixer==null)throw new IllegalStateException("Canonical DAW spine incomplete");
+  if(project.audioGraph==null||project.transport==null||project.timeline==null||project.mixer==null||project.clipEngine==null||project.undo==null)throw new IllegalStateException("Canonical DAW spine incomplete");\n  if(project.tracks()==null||project.clips()==null||project.assets()==null)throw new IllegalStateException("Canonical project collections unavailable");
  }
  public String summary(){return surfaces().size()+" DAW surfaces · 1 project · 1 transport · 1 audio graph · 1 APK";}
 }
