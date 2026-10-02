@@ -29,7 +29,8 @@ public class MainActivity extends Activity{
   String name=displayName(uri); Clip clip=project.director.placeMedia(kind,uri.toString(),name,project.transport.frame(),project.transport.sampleRate()*60L);
   project.tv.play(clip.assetId); persist(); workspace="TV"; showStudio();
  }
- void showLiveTvDialog(){final EditText input=new EditText(this);input.setHint("Official/public HLS or media stream URL");new AlertDialog.Builder(this).setTitle("Free Live TV").setMessage("Add a free, authorized public stream. Availability may vary by broadcaster and region.").setView(input).setPositiveButton("PLAY",(d,w)->{String u=input.getText().toString().trim();if(u.isEmpty())return;project.tv.addLiveChannel("Live Channel",u);project.tv.playLiveChannel(project.tv.liveChannels().size()-1);persist();workspace="TV";showStudio();}).setNegativeButton("CANCEL",null).show();}\n String displayName(Uri uri){String name="Imported TV Media";Cursor cur=null;try{cur=getContentResolver().query(uri,null,null,null,null);if(cur!=null&&cur.moveToFirst()){int i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)name=cur.getString(i);}}finally{if(cur!=null)cur.close();}return name;}
+ void showLiveTvDialog(){final EditText input=new EditText(this);input.setHint("Official/public HLS or media stream URL");new AlertDialog.Builder(this).setTitle("Free Live TV").setMessage("Add a free, authorized public stream. Availability may vary by broadcaster and region.").setView(input).setPositiveButton("PLAY",(d,w)->{String u=input.getText().toString().trim();if(u.isEmpty())return;project.tv.addLiveChannel("Live Channel",u);project.tv.playLiveChannel(project.tv.liveChannels().size()-1);persist();workspace="TV";showStudio();}).setNegativeButton("CANCEL",null).show();}
+ String displayName(Uri uri){String name="Imported TV Media";Cursor cur=null;try{cur=getContentResolver().query(uri,null,null,null,null);if(cur!=null&&cur.moveToFirst()){int i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)name=cur.getString(i);}}finally{if(cur!=null)cur.close();}return name;}
  void importTvFile(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"video/*","audio/*"});i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(i,PICK_TV_MEDIA);}
  TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(18,12,18,12);return v;}
  Button button(String s){Button x=new Button(this);x.setText(s);x.setTextColor(white);x.setBackgroundColor(panel);return x;}
@@ -65,7 +66,10 @@ public class MainActivity extends Activity{
   addWorkspaceControls(p,status);
 
   p.addView(t("CORE AUTHORITY",14,gold));
-  p.addView(t("Project: "+project.name+"\nTracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"\nGraph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"\nUndo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
+  p.addView(t("Project: "+project.name+"
+Tracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"
+Graph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"
+Undo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
   p.addView(t("External engines may donate/import capabilities and assets. They do not own Project, Transport, Timeline, Audio Graph, Track, Clip, Asset, Mixer, or Undo state.",12,muted));
   sc.addView(p);setContentView(sc);
  }
@@ -86,7 +90,8 @@ public class MainActivity extends Activity{
   }else if("COMPOSE / MIDI".equals(workspace)){
    p.addView(t("Grid: 1/4 beat · "+project.grid.framesForDivision(4)+" frames · Metronome "+(project.metronome.enabled()?"ON":"OFF"),12,green));
   }else if("TV".equals(workspace)){
-   Button imp=button("IMPORT FILE");imp.setOnClickListener(v->importTvFile());p.addView(imp);\n   Button live=button("FREE LIVE TV");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
+   Button imp=button("IMPORT FILE");imp.setOnClickListener(v->importTvFile());p.addView(imp);
+   Button live=button("FREE LIVE TV");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
    Asset current=project.tv.current();p.addView(t(current==null?"No TV media loaded":"Loaded · "+current.name,12,green));
    if(current!=null){LinearLayout tvc=new LinearLayout(this);tvc.setOrientation(LinearLayout.HORIZONTAL);Button playTv=button("TV PLAY");playTv.setOnClickListener(v->{project.tv.play();persist();showStudio();});tvc.addView(playTv);Button pauseTv=button("TV PAUSE");pauseTv.setOnClickListener(v->{project.tv.pause();persist();showStudio();});tvc.addView(pauseTv);Button stopTv=button("TV STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);p.addView(tvc);}
   }else if("IMAGE / VIDEO".equals(workspace)){
