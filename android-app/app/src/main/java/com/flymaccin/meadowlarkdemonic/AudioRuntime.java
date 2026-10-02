@@ -34,7 +34,7 @@ public final class AudioRuntime {
             boolean mute=node!=null&&project.automation.valueAt(Automation.target(node.id,"mute"),startFrame,node.get("mute",0.0))>=0.5;
             if(mute)continue;
             for(AudioGraph.Node routed:project.audioGraph.downstream(slice.track.graphNodeId)){
-                if(routed.type.startsWith("FX_"))GraphDsp.process(routed,pcm,count);
+                if(routed.type.startsWith("FX_")){applyAutomation(routed,startFrame);GraphDsp.process(routed,pcm,count);}
             }
             double left=gain*(pan>0?1.0-pan:1.0),right=gain*(pan<0?1.0+pan:1.0);
             int offset=(int)(slice.timelineFrame-startFrame);
@@ -49,16 +49,16 @@ public final class AudioRuntime {
             AudioGraph.Node trackNode=project.audioGraph.node(track.graphNodeId);if(trackNode==null)continue;
             for(AudioGraph.Node send:project.audioGraph.downstream(track.graphNodeId)){
                 if(!"SEND".equals(send.type))continue;
-                double sendGain=send.get("gain",1.0);
+                double sendGain=project.automation.valueAt(Automation.target(send.id,"gain"),startFrame,send.get("gain",1.0));
                 for(AudioGraph.Node bus:project.audioGraph.downstream(send.id)){
                     if(!"BUS".equals(bus.type))continue;
-                    double busGain=bus.get("gain",1.0);
+                    double busGain=project.automation.valueAt(Automation.target(bus.id,"gain"),startFrame,bus.get("gain",1.0));
                     // Send taps use the already rendered track contribution for this block.
                     for(ClipEngine.PlaybackSlice slice:project.clipEngine.slices(startFrame,frames)){
                         if(!slice.track.id.equals(track.id)||slice.asset.kind!=Asset.Kind.AUDIO)continue;
                         int count=(int)Math.min(Integer.MAX_VALUE,slice.frames);short[] tap=new short[count*2];
                         decoder.decode(slice.asset,slice.sourceFrame,count,tap);
-                        for(AudioGraph.Node fx:project.audioGraph.downstream(bus.id))if(fx.type.startsWith("FX_"))GraphDsp.process(fx,tap,count);
+                        for(AudioGraph.Node fx:project.audioGraph.downstream(bus.id))if(fx.type.startsWith("FX_")){applyAutomation(fx,startFrame);GraphDsp.process(fx,tap,count);}
                         int offset=(int)(slice.timelineFrame-startFrame);
                         for(int i=0;i<count&&offset+i<frames;i++){int dst=(offset+i)*2,src=i*2;mix[dst]+=Math.round((float)(tap[src]*sendGain*busGain));mix[dst+1]+=Math.round((float)(tap[src+1]*sendGain*busGain));}
                     }
@@ -71,6 +71,11 @@ public final class AudioRuntime {
         for(int i=0;i<n;i++){long v=Math.round(mix[i]*masterGain);out[i]=(short)Math.max(Short.MIN_VALUE,Math.min(Short.MAX_VALUE,v));}
         MeterAnalyzer.analyze(out,project.addOns.meters);
         return out;
+    }
+
+    private void applyAutomation(AudioGraph.Node node,long frame){
+        String[] params={"gain","pan","drive","amount","frames","feedback","mix"};
+        for(String p:params){String target=Automation.target(node.id,p);if(!project.automation.points(target).isEmpty())node.set(p,project.automation.valueAt(target,frame,node.get(p,0.0)));}
     }
 
     public int pump(AndroidAudioIO io,int frames){
