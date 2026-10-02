@@ -32,24 +32,53 @@ jobs:
       - name: Build unsigned release APK
         run: ./gradlew :app:assembleRelease --stacktrace
         working-directory: android-app
-      - name: Validate APKs
+      - name: Validate unsigned artifacts
         run: test -s app/build/outputs/apk/debug/app-debug.apk && test -s app/build/outputs/apk/release/app-release-unsigned.apk
         working-directory: android-app
-      - name: Verify release signing gate
+      - name: Materialize production keystore
+        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
         shell: bash
+        env:
+          FME_KEYSTORE_BASE64: ${{ secrets.FME_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$FME_KEYSTORE_PATH" ]; then
-            test -s app/build/outputs/apk/release/app-release.apk
-            echo "Production signing evidence: PRESENT"
-          else
-            echo "Production signing evidence: PENDING (no signing credentials supplied)"
-          fi
+          umask 077
+          printf '%s' "$FME_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/fme-release.jks"
+          test -s "$RUNNER_TEMP/fme-release.jks"
+      - name: Build production-signed APK
+        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
         working-directory: android-app
         env:
-          FME_KEYSTORE_PATH: ${{ secrets.FME_KEYSTORE_PATH }}
+          FME_KEYSTORE_PATH: ${{ runner.temp }}/fme-release.jks
+          FME_KEYSTORE_PASSWORD: ${{ secrets.FME_KEYSTORE_PASSWORD }}
+          FME_KEY_ALIAS: ${{ secrets.FME_KEY_ALIAS }}
+          FME_KEY_PASSWORD: ${{ secrets.FME_KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease --stacktrace
+      - name: Verify production APK signature
+        if: ${{ secrets.FME_KEYSTORE_BASE64 != '' }}
+        shell: bash
+        working-directory: android-app
+        run: |
+          APK="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee "$RUNNER_TEMP/apksigner-verification.txt"
+          sha256sum "$APK" | tee "$RUNNER_TEMP/app-release.sha256"
+      - name: Signing gate status
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.FME_KEYSTORE_BASE64 }}" ]; then
+            echo "Production signing evidence: VERIFIED"
+          else
+            echo "Production signing evidence: PENDING. Configure FME_KEYSTORE_BASE64, FME_KEYSTORE_PASSWORD, FME_KEY_ALIAS and FME_KEY_PASSWORD."
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: MeadowlarkDemonic-Android-APK
           path: |
             android-app/app/build/outputs/apk/debug/app-debug.apk
             android-app/app/build/outputs/apk/release/app-release-unsigned.apk
+            android-app/app/build/outputs/apk/release/app-release.apk
+            ${{ runner.temp }}/apksigner-verification.txt
+            ${{ runner.temp }}/app-release.sha256
+          if-no-files-found: ignore
