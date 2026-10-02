@@ -11,17 +11,17 @@ public final class DemonicProject {
  private final ArrayList<Asset> assets=new ArrayList<>();
  private final ArrayList<Track> tracks=new ArrayList<>();
  private final ArrayList<Clip> clips=new ArrayList<>();
- public final Timeline timeline;
+ public final Timeline timeline; public final ClipEngine clipEngine;
 
  public DemonicProject(String name){this(UUID.randomUUID().toString(),name,new Transport(),new AudioGraph());}
- private DemonicProject(String id,String name,Transport transport,AudioGraph graph){this.id=id;this.name=name;this.transport=transport;this.audioGraph=graph;this.timeline=new Timeline(this);}
+ private DemonicProject(String id,String name,Transport transport,AudioGraph graph){this.id=id;this.name=name;this.transport=transport;this.audioGraph=graph;this.timeline=new Timeline(this);this.clipEngine=new ClipEngine(this);}
  public List<Asset> assets(){return Collections.unmodifiableList(assets);}
  public List<Track> tracks(){return Collections.unmodifiableList(tracks);}
  public List<Clip> clips(){return Collections.unmodifiableList(clips);}
  public Asset addAsset(Asset a){assets.add(a);return a;}
  public Track addTrack(Track t){tracks.add(t);if(t.kind==Track.Kind.AUDIO||t.kind==Track.Kind.MIDI){audioGraph.addNode(t.graphNodeId,"TRACK_"+t.kind.name());audioGraph.connect(t.graphNodeId,AudioGraph.MASTER);}return t;}
  public Clip addClip(Clip c){requireTrack(c.trackId);requireAsset(c.assetId);clips.add(c);return c;}
- private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
+ public Track track(String id){for(Track t:tracks)if(t.id.equals(id))return t;return null;}\n public Asset asset(String id){for(Asset a:assets)if(a.id.equals(id))return a;return null;}\n private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
  private void requireAsset(String id){for(Asset a:assets)if(a.id.equals(id))return;throw new IllegalArgumentException("Unknown asset "+id);}
 
  public JSONObject toJson(){try{JSONArray aa=new JSONArray(),tt=new JSONArray(),cc=new JSONArray();for(Asset a:assets)aa.put(a.toJson());for(Track t:tracks)tt.put(t.toJson());for(Clip c:clips)cc.put(c.toJson());return new JSONObject().put("schemaVersion",SCHEMA_VERSION).put("id",id).put("name",name).put("transport",transport.toJson()).put("audioGraph",audioGraph.toJson()).put("assets",aa).put("tracks",tt).put("clips",cc);}catch(Exception e){throw new IllegalStateException("Project serialization failed",e);}}
