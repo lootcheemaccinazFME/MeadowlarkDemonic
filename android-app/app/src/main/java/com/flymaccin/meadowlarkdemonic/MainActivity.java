@@ -66,10 +66,7 @@ public class MainActivity extends Activity{
   addWorkspaceControls(p,status);
 
   p.addView(t("CORE AUTHORITY",14,gold));
-  p.addView(t("Project: "+project.name+"
-Tracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"
-Graph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"
-Undo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
+  p.addView(t("Project: "+project.name+"\\nTracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"\\nGraph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"\\nUndo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
   p.addView(t("External engines may donate/import capabilities and assets. They do not own Project, Transport, Timeline, Audio Graph, Track, Clip, Asset, Mixer, or Undo state.",12,muted));
   sc.addView(p);setContentView(sc);
  }
