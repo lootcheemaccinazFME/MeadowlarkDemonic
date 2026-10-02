@@ -14,5 +14,9 @@ public final class ProductionSession {
     public void trim(String clipId,long start,long length,long sourceOffset){project.director.trim(clipId,start,length,sourceOffset);}
     public void undo(){project.history.undo();}
     public void redo(){project.history.redo();}
-    public String summary(){return "AI/Director · frame "+project.transport.frame()+" · assets "+project.assets().size()+" · clips "+project.clips().size();}
+    public DemonicAddOnSuite.Workspace addOns(){return project.addOns;}
+    public DemonicAddOnSuite.DemonicVault vault(){return project.addOns.vault;}
+    public DemonicAddOnSuite.PerformanceMode live(){return project.addOns.live;}
+    public DemonicAddOnSuite.DemonicRack rack(){return project.addOns.universalRack;}
+    public String summary(){return "AI/Director · frame "+project.transport.frame()+" · assets "+project.assets().size()+" · clips "+project.clips().size()+" · add-ons active";}
 }
