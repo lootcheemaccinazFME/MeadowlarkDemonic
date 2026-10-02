@@ -21,7 +21,9 @@ public final class DemonicProject {
  public Asset addAsset(Asset a){assets.add(a);return a;}
  public Track addTrack(Track t){tracks.add(t);if(t.kind==Track.Kind.AUDIO||t.kind==Track.Kind.MIDI){audioGraph.addNode(t.graphNodeId,"TRACK_"+t.kind.name());audioGraph.connect(t.graphNodeId,AudioGraph.MASTER);}return t;}
  public Clip addClip(Clip c){requireTrack(c.trackId);requireAsset(c.assetId);clips.add(c);return c;}
- public Track track(String id){for(Track t:tracks)if(t.id.equals(id))return t;return null;}\n public Asset asset(String id){for(Asset a:assets)if(a.id.equals(id))return a;return null;}\n private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
+ public Track track(String id){for(Track t:tracks)if(t.id.equals(id))return t;return null;}
+ public Asset asset(String id){for(Asset a:assets)if(a.id.equals(id))return a;return null;}
+ private void requireTrack(String id){for(Track t:tracks)if(t.id.equals(id))return;throw new IllegalArgumentException("Unknown track "+id);}
  private void requireAsset(String id){for(Asset a:assets)if(a.id.equals(id))return;throw new IllegalArgumentException("Unknown asset "+id);}
 
  public JSONObject toJson(){try{JSONArray aa=new JSONArray(),tt=new JSONArray(),cc=new JSONArray();for(Asset a:assets)aa.put(a.toJson());for(Track t:tracks)tt.put(t.toJson());for(Clip c:clips)cc.put(c.toJson());return new JSONObject().put("schemaVersion",SCHEMA_VERSION).put("id",id).put("name",name).put("transport",transport.toJson()).put("audioGraph",audioGraph.toJson()).put("assets",aa).put("tracks",tt).put("clips",cc);}catch(Exception e){throw new IllegalStateException("Project serialization failed",e);}}
