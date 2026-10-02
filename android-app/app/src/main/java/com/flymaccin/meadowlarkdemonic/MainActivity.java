@@ -30,6 +30,13 @@ public class MainActivity extends Activity{
   Button stop=button("STOP");stop.setOnClickListener(v->{project.transport.stop();persist();status.setText(statusText());});transport.addView(stop);
   Button rec=button("REC");rec.setOnClickListener(v->{project.transport.record();persist();status.setText(statusText());});transport.addView(rec);
   p.addView(transport);
+  LinearLayout timing=new LinearLayout(this);timing.setOrientation(LinearLayout.HORIZONTAL);
+  Button bpmDown=button("BPM -");bpmDown.setOnClickListener(v->{project.transport.setBpm(Math.max(20,project.transport.bpm()-1));persist();showStudio();});timing.addView(bpmDown);
+  Button bpmUp=button("BPM +");bpmUp.setOnClickListener(v->{project.transport.setBpm(Math.min(400,project.transport.bpm()+1));persist();showStudio();});timing.addView(bpmUp);
+  Button metro=button(project.metronome.enabled()?"CLICK ON":"CLICK OFF");metro.setOnClickListener(v->{project.metronome.enabled(!project.metronome.enabled());persist();showStudio();});timing.addView(metro);p.addView(timing);
+  LinearLayout loop=new LinearLayout(this);loop.setOrientation(LinearLayout.HORIZONTAL);
+  Button loopBar=button(project.transport.loopEnabled()?"LOOP ON":"LOOP 4 BEATS");loopBar.setOnClickListener(v->{if(project.transport.loopEnabled())project.transport.setLoop(project.transport.loopStart(),project.transport.loopEnd(),false);else{long start=project.grid.snap(project.transport.frame(),1);project.transport.setLoop(start,start+project.grid.framesPerBeat()*4,true);}persist();showStudio();});loop.addView(loopBar);
+  Button count=button("COUNT-IN "+project.metronome.countInBars()+" BAR");count.setOnClickListener(v->{project.metronome.countInBars((project.metronome.countInBars()+1)%5);persist();showStudio();});loop.addView(count);p.addView(loop);
 
   p.addView(t("UNIFIED WORKSPACES",14,gold));
   LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.VERTICAL);
