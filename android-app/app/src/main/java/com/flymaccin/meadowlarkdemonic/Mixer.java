@@ -9,4 +9,7 @@ public final class Mixer{
  public void mute(String trackId,boolean on){channel(trackId).set("mute",on?1:0);}
  public void solo(String trackId,boolean on){channel(trackId).set("solo",on?1:0);}
  public void masterGain(double linear){project.audioGraph.node(AudioGraph.MASTER).set("gain",Math.max(0,linear));}
+ public AudioGraph.Node addInsert(String trackId,String effectType){Track t=project.track(trackId);if(t==null)throw new IllegalArgumentException("Unknown track "+trackId);String id="fx:"+trackId+":"+java.util.UUID.randomUUID();AudioGraph.Node fx=project.audioGraph.addNode(id,"FX_"+effectType.toUpperCase());project.audioGraph.disconnect(t.graphNodeId,AudioGraph.MASTER);project.audioGraph.connect(t.graphNodeId,id);project.audioGraph.connect(id,AudioGraph.MASTER);return fx;}
+ public void removeInsert(String trackId,String effectNodeId){Track t=project.track(trackId);AudioGraph.Node fx=project.audioGraph.node(effectNodeId);if(t==null||fx==null)throw new IllegalArgumentException("Unknown insert");project.audioGraph.removeNode(effectNodeId);project.audioGraph.connect(t.graphNodeId,AudioGraph.MASTER);}
+ public void effectParameter(String effectNodeId,String parameter,double value){AudioGraph.Node fx=project.audioGraph.node(effectNodeId);if(fx==null||!fx.type.startsWith("FX_"))throw new IllegalArgumentException("Unknown effect");fx.set(parameter,value);}
 }
