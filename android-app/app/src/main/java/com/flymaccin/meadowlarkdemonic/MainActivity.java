@@ -53,7 +53,7 @@ public class MainActivity extends Activity{
   for(String s:new String[]{"HOME","DEMONIC DAW","TV / MEDIA","EMULATOR","FME GAMES","AGENT / AI","AI VIDEO","COMICS / DESIGN","WRITING","ASSETS","DELIVER"}){Button b=button(s);if(("HOME".equals(s)&&"HOME".equals(workspace))||("TV / MEDIA".equals(s)&&"TV".equals(workspace)))b=activeButton(s);final String dest=s;b.setOnClickListener(v->{if("TV / MEDIA".equals(dest))workspace="TV";else if("DEMONIC DAW".equals(dest))workspace="ARRANGE";else if("AI VIDEO".equals(dest)||"COMICS / DESIGN".equals(dest))workspace="IMAGE / VIDEO";else if("AGENT / AI".equals(dest))workspace="MAESTRO / AI";else workspace="HOME";showStudio();});top.addView(b);}topScroll.addView(top);root.addView(topScroll);
   LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.HORIZONTAL);
   LinearLayout rail=panelBox();rail.addView(t("FME NAVIGATION",13,gold));
-  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","MIX","MAESTRO / AI","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){Button b=s.equals(workspace)?activeButton(s):button(s);b.setOnClickListener(v->{workspace=s;showStudio();});rail.addView(b);}body.addView(rail,new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.WRAP_CONTENT));
+  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","HYPHY","MIX","MAESTRO / AI","COLLAB","LIVE","DELIVER","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){Button b=s.equals(workspace)?activeButton(s):button(s);b.setOnClickListener(v->{workspace=s;showStudio();});rail.addView(b);}body.addView(rail,new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.WRAP_CONTENT));
   ScrollView sc=new ScrollView(this);LinearLayout p=panelBox();p.addView(t("WORKSPACE · "+workspace,18,gold));p.addView(t(workspaceText(),12,white));addWorkspaceControls(p,status);
   p.addView(t("CORE AUTHORITY",13,gold));p.addView(t("Project "+project.name+" · Tracks "+project.tracks().size()+" · Clips "+project.clips().size()+" · Assets "+project.assets().size()+" · Graph "+project.audioGraph.nodes().size()+" nodes / "+project.audioGraph.edges().size()+" routes",11,muted));
   sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
@@ -76,6 +76,16 @@ public class MainActivity extends Activity{
    final String audioId=firstAudio;
    if(audioId!=null){Button arm=button(project.recording.armed()?"DISARM":"ARM FIRST AUDIO");arm.setOnClickListener(v->{if(project.recording.armed())project.recording.disarm();else project.recording.arm(audioId);persist();showStudio();});p.addView(arm);
     Button mon=button(project.recording.monitoring()?"MONITOR OFF":"MONITOR ON");mon.setEnabled(project.recording.armed());mon.setOnClickListener(v->{project.recording.monitoring(!project.recording.monitoring());persist();showStudio();});p.addView(mon);}
+  }else if("HYPHY".equals(workspace)){
+   p.addView(t("BAY POCKET · Swing "+project.hyphy.swing()+" · Micro "+project.hyphy.microtiming()+" · Roll "+project.hyphy.roll()+" · Slides "+(project.hyphy.bassSlides()?"ON":"OFF"),12,green));
+   Button swing=button("SWING +");swing.setOnClickListener(v->{project.hyphy.swing(project.hyphy.swing()+.01);persist();showStudio();});p.addView(swing);
+   Button slides=button(project.hyphy.bassSlides()?"808 SLIDES ON":"808 SLIDES OFF");slides.setOnClickListener(v->{project.hyphy.bassSlides(!project.hyphy.bassSlides());persist();showStudio();});p.addView(slides);
+  }else if("COLLAB".equals(workspace)){
+   p.addView(t("SESSION BRANCH · "+project.collaboration.branch()+" · Collaborators "+project.collaboration.collaborators().size(),12,green));
+  }else if("LIVE".equals(workspace)){
+   p.addView(t("LIVE MODE · "+project.live.mode()+" · Multitrack capture "+(project.live.captureMultitrack()?"ON":"OFF"),12,green));
+  }else if("DELIVER".equals(workspace)){
+   p.addView(t("CREDITS · "+project.delivery.credits().size()+" · Remix parent "+project.delivery.remixParent(),12,green));
   }else if("MIX".equals(workspace)){
    Button down=button("MASTER -");down.setOnClickListener(v->{AudioGraph.Node m=project.audioGraph.node(AudioGraph.MASTER);project.mixer.masterGain(Math.max(0,m.get("gain",1)-.1));persist();showStudio();});p.addView(down);
    Button up=button("MASTER +");up.setOnClickListener(v->{AudioGraph.Node m=project.audioGraph.node(AudioGraph.MASTER);project.mixer.masterGain(m.get("gain",1)+.1);persist();showStudio();});p.addView(up);
@@ -117,6 +127,10 @@ public class MainActivity extends Activity{
   if("ARRANGE".equals(workspace))return "Timeline clips "+project.clips().size()+" · Undo "+project.history.undoDepth()+" · Redo "+project.history.redoDepth();
   if("RECORD".equals(workspace))return "Recording shares Transport, AudioGraph and canonical project assets.";
   if("COMPOSE / MIDI".equals(workspace))return "MIDI tracks use the canonical Clip Engine, Piano Roll and Instrument Rack.";
+  if("HYPHY".equals(workspace))return "Bay-pocket timing, swing, rolls and 808 slide controls share the canonical transport.";
+  if("COLLAB".equals(workspace))return "Collaboration permissions and session branches remain project-owned.";
+  if("LIVE".equals(workspace))return "Live Stage/Jam/Open Mic state routes through the canonical project.";
+  if("DELIVER".equals(workspace))return "Credits, remix lineage and delivery metadata stay attached to this project.";
   if("MIX".equals(workspace))return "Graph nodes "+project.audioGraph.nodes().size()+" · routes "+project.audioGraph.edges().size()+" · canonical Mixer/DSP.";
   if("MAESTRO / AI".equals(workspace)||"DIRECTOR".equals(workspace))return project.production.summary();
   if("IMAGE / VIDEO".equals(workspace))return "Media clips "+project.clips().size()+" · transforms share the project timeline.";
