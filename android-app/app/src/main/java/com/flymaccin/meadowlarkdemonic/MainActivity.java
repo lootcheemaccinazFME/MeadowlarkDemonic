@@ -62,6 +62,16 @@ public class MainActivity extends Activity{
    Button up=button("MASTER +");up.setOnClickListener(v->{AudioGraph.Node m=project.audioGraph.node(AudioGraph.MASTER);project.mixer.masterGain(m.get("gain",1)+.1);persist();showStudio();});p.addView(up);
   }else if("COMPOSE / MIDI".equals(workspace)){
    p.addView(t("Grid: 1/4 beat · "+project.grid.framesForDivision(4)+" frames · Metronome "+(project.metronome.enabled()?"ON":"OFF"),12,green));
+  }else if("IMAGE / VIDEO".equals(workspace)){
+   Clip media=null;for(Clip cl:project.clips()){Asset a=project.asset(cl.assetId);if(a!=null&&(a.kind==Asset.Kind.IMAGE||a.kind==Asset.Kind.VIDEO)){media=cl;break;}}
+   final Clip mc=media;
+   if(mc!=null){MediaEditor.Transform tr=project.mediaEditor.transform(mc.id);p.addView(t("First media · X "+tr.x+" · Y "+tr.y+" · Scale "+tr.scaleX+" · Rotation "+tr.rotation+" · Opacity "+tr.opacity,12,green));
+    Button left=button("NUDGE LEFT");left.setOnClickListener(v->{project.mediaEditor.move(mc.id,Math.max(0,mc.startFrame-project.grid.framesForDivision(4)));persist();showStudio();});p.addView(left);
+    Button right=button("NUDGE RIGHT");right.setOnClickListener(v->{project.mediaEditor.move(mc.id,mc.startFrame+project.grid.framesForDivision(4));persist();showStudio();});p.addView(right);
+    Button scale=button("SCALE +");scale.setOnClickListener(v->{MediaEditor.Transform x=project.mediaEditor.transform(mc.id);project.mediaEditor.setTransform(mc.id,x.x,x.y,x.scaleX+.1,x.scaleY+.1,x.rotation,x.opacity);persist();showStudio();});p.addView(scale);
+    Button rotate=button("ROTATE +15");rotate.setOnClickListener(v->{MediaEditor.Transform x=project.mediaEditor.transform(mc.id);project.mediaEditor.setTransform(mc.id,x.x,x.y,x.scaleX,x.scaleY,x.rotation+15,x.opacity);persist();showStudio();});p.addView(rotate);
+    Button fade=button("OPACITY -");fade.setOnClickListener(v->{MediaEditor.Transform x=project.mediaEditor.transform(mc.id);project.mediaEditor.setTransform(mc.id,x.x,x.y,x.scaleX,x.scaleY,x.rotation,Math.max(0,x.opacity-.1));persist();showStudio();});p.addView(fade);
+   }
   }
  }
  String workspaceText(){
