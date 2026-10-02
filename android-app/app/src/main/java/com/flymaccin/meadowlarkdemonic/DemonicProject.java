@@ -24,10 +24,10 @@ public final class DemonicProject {
  void removeClipInternal(Clip c){clips.remove(c);}
  void removeAssetInternal(Asset a){assets.remove(a);}
  void restoreAssetInternal(Asset a){if(!assets.contains(a))assets.add(a);}
- void removeTrackInternal(Track t){tracks.remove(t);}
- void restoreTrackInternal(Track t){if(!tracks.contains(t))tracks.add(t);}
+ void removeTrackInternal(Track t){tracks.remove(t);if(t.kind==Track.Kind.AUDIO||t.kind==Track.Kind.MIDI)audioGraph.removeNode(t.graphNodeId);}
+ void restoreTrackInternal(Track t){if(!tracks.contains(t)){tracks.add(t);if(t.kind==Track.Kind.AUDIO||t.kind==Track.Kind.MIDI){audioGraph.addNode(t.graphNodeId,"TRACK_"+t.kind.name());audioGraph.connect(t.graphNodeId,AudioGraph.MASTER);}}}
  public Asset addAssetUndoable(final Asset a){history.execute(new UndoHistory.Command(){public void apply(){restoreAssetInternal(a);}public void revert(){removeAssetInternal(a);}public String label(){return "Add asset";}});return a;}
- public Track addTrackUndoable(final Track t){history.execute(new UndoHistory.Command(){public void apply(){if(!tracks.contains(t))addTrack(t);}public void revert(){removeTrackInternal(t);}public String label(){return "Add track";}});return t;}
+ public Track addTrackUndoable(final Track t){history.execute(new UndoHistory.Command(){public void apply(){restoreTrackInternal(t);}public void revert(){removeTrackInternal(t);}public String label(){return "Add track";}});return t;}
  public Clip addClipUndoable(final Clip c){requireTrack(c.trackId);requireAsset(c.assetId);history.execute(new UndoHistory.Command(){public void apply(){restoreClipInternal(c);}public void revert(){removeClipInternal(c);}public String label(){return "Add clip";}});return c;}
  void restoreClipInternal(Clip c){requireTrack(c.trackId);requireAsset(c.assetId);if(!clips.contains(c))clips.add(c);}
  public Track track(String id){for(Track t:tracks)if(t.id.equals(id))return t;return null;}
