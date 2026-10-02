@@ -32,44 +32,30 @@ public class MainActivity extends Activity{
  void showLiveTvDialog(){LinearLayout form=new LinearLayout(this);form.setOrientation(LinearLayout.VERTICAL);final EditText name=new EditText(this);name.setHint("Channel name");form.addView(name);final EditText input=new EditText(this);input.setHint("Official/public HLS or media stream URL");form.addView(input);final Spinner category=new Spinner(this);String[] cats={"Local","News","Movies","Kids","Music","International"};category.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,cats));form.addView(category);new AlertDialog.Builder(this).setTitle("Add Live TV Channel").setMessage("Add a free, authorized public stream and assign its category.").setView(form).setPositiveButton("ADD & PLAY",(d,w)->{String u=input.getText().toString().trim();if(u.isEmpty())return;String n=name.getText().toString().trim();if(n.isEmpty())n="Live Channel";String cat=String.valueOf(category.getSelectedItem());project.tv.addLiveChannel(n,u,cat,"");project.tv.selectedCategory(cat);project.tv.playLiveChannel(project.tv.liveChannels().size()-1);persist();workspace="TV";showStudio();}).setNegativeButton("CANCEL",null).show();}
  String displayName(Uri uri){String name="Imported TV Media";Cursor cur=null;try{cur=getContentResolver().query(uri,null,null,null,null);if(cur!=null&&cur.moveToFirst()){int i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)name=cur.getString(i);}}finally{if(cur!=null)cur.close();}return name;}
  void importTvFile(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"video/*","audio/*"});i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(i,PICK_TV_MEDIA);}
- TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(18,12,18,12);return v;}
+ TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(18,12,18,12);return v;}\n LinearLayout panelBox(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);x.setPadding(14,10,14,10);x.setBackgroundColor(Color.rgb(7,11,15));return x;}
  Button button(String s){Button x=new Button(this);x.setText(s);x.setTextColor(white);x.setBackgroundColor(panel);return x;}
  Button activeButton(String s){Button x=button(s);x.setTextColor(Color.WHITE);x.setBackgroundColor(deepRed);return x;}
  void persist(){ProjectStore.save(this,project);}
 
  void showStudio(){
-  ScrollView sc=new ScrollView(this);LinearLayout p=new LinearLayout(this);p.setOrientation(LinearLayout.VERTICAL);p.setPadding(24,18,24,18);p.setBackgroundColor(Color.rgb(9,9,12));
-  p.addView(t("DEMONIC",30,gold));
-  p.addView(t("ONE PROJECT · ONE TRANSPORT · ONE AUDIO GRAPH",12,green));
-  TextView status=t(statusText(),13,white);p.addView(status);
-
+  LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(8,8,8,8);root.setBackgroundColor(black);
+  LinearLayout header=panelBox();LinearLayout brand=new LinearLayout(this);brand.setOrientation(LinearLayout.HORIZONTAL);
+  TextView fme=t("♛ FLYMACCIN ENT",24,gold);brand.addView(fme,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));
+  TextView demonic=t("DEMONIC ANDROID",22,red);brand.addView(demonic);header.addView(brand);
+  TextView status=t(statusText(),12,green);header.addView(status);
   LinearLayout transport=new LinearLayout(this);transport.setOrientation(LinearLayout.HORIZONTAL);
-  Button play=button("PLAY");play.setOnClickListener(v->{project.transport.play();persist();status.setText(statusText());});transport.addView(play);
-  Button stop=button("STOP");stop.setOnClickListener(v->{project.transport.stop();persist();status.setText(statusText());});transport.addView(stop);
-  Button rec=button("REC");rec.setOnClickListener(v->{project.transport.record();persist();status.setText(statusText());});transport.addView(rec);
-  p.addView(transport);
-  LinearLayout timing=new LinearLayout(this);timing.setOrientation(LinearLayout.HORIZONTAL);
-  Button bpmDown=button("BPM -");bpmDown.setOnClickListener(v->{project.transport.setBpm(Math.max(20,project.transport.bpm()-1));persist();showStudio();});timing.addView(bpmDown);
-  Button bpmUp=button("BPM +");bpmUp.setOnClickListener(v->{project.transport.setBpm(Math.min(400,project.transport.bpm()+1));persist();showStudio();});timing.addView(bpmUp);
-  Button metro=button(project.metronome.enabled()?"CLICK ON":"CLICK OFF");metro.setOnClickListener(v->{project.metronome.enabled(!project.metronome.enabled());persist();showStudio();});timing.addView(metro);p.addView(timing);
-  LinearLayout loop=new LinearLayout(this);loop.setOrientation(LinearLayout.HORIZONTAL);
-  Button loopBar=button(project.transport.loopEnabled()?"LOOP ON":"LOOP 4 BEATS");loopBar.setOnClickListener(v->{if(project.transport.loopEnabled())project.transport.setLoop(project.transport.loopStart(),project.transport.loopEnd(),false);else{long start=project.grid.snap(project.transport.frame(),1);project.transport.setLoop(start,start+project.grid.framesPerBeat()*4,true);}persist();showStudio();});loop.addView(loopBar);
-  Button count=button("COUNT-IN "+project.metronome.countInBars()+" BAR");count.setOnClickListener(v->{project.metronome.countInBars((project.metronome.countInBars()+1)%5);persist();showStudio();});loop.addView(count);p.addView(loop);
-
-  p.addView(t("UNIFIED WORKSPACES",14,gold));
-  LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.VERTICAL);
-  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","MIX","MAESTRO / AI","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){
-   Button x=s.equals(workspace)?activeButton(s):button(s);x.setOnClickListener(v->{workspace=s;showStudio();});nav.addView(x);
-  }
-  p.addView(nav);
-  p.addView(t("WORKSPACE · "+workspace,18,gold));
-  p.addView(t(workspaceText(),13,white));
-  addWorkspaceControls(p,status);
-
-  p.addView(t("CORE AUTHORITY",14,gold));
-  p.addView(t("Project: "+project.name+"\\nTracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"\\nGraph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"\\nUndo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
-  p.addView(t("External engines may donate/import capabilities and assets. They do not own Project, Transport, Timeline, Audio Graph, Track, Clip, Asset, Mixer, or Undo state.",12,muted));
-  sc.addView(p);setContentView(sc);
+  Button rewind=button("|◀");transport.addView(rewind);Button play=activeButton("▶ PLAY");play.setOnClickListener(v->{project.transport.play();persist();status.setText(statusText());});transport.addView(play);
+  Button stop=button("■ STOP");stop.setOnClickListener(v->{project.transport.stop();persist();status.setText(statusText());});transport.addView(stop);
+  Button rec=button("● REC");rec.setTextColor(red);rec.setOnClickListener(v->{project.transport.record();persist();status.setText(statusText());});transport.addView(rec);
+  transport.addView(t("  "+project.transport.bpm()+" BPM  ·  "+project.transport.sampleRate()+" Hz",12,white));header.addView(transport);root.addView(header);
+  HorizontalScrollView topScroll=new HorizontalScrollView(this);LinearLayout top=new LinearLayout(this);top.setOrientation(LinearLayout.HORIZONTAL);
+  for(String s:new String[]{"HOME","DEMONIC DAW","TV / MEDIA","EMULATOR","FME GAMES","AGENT / AI","AI VIDEO","COMICS / DESIGN","WRITING","ASSETS","DELIVER"}){Button b=button(s);if(("HOME".equals(s)&&"HOME".equals(workspace))||("TV / MEDIA".equals(s)&&"TV".equals(workspace)))b=activeButton(s);final String dest=s;b.setOnClickListener(v->{if("TV / MEDIA".equals(dest))workspace="TV";else if("DEMONIC DAW".equals(dest))workspace="ARRANGE";else if("AI VIDEO".equals(dest)||"COMICS / DESIGN".equals(dest))workspace="IMAGE / VIDEO";else if("AGENT / AI".equals(dest))workspace="MAESTRO / AI";else workspace="HOME";showStudio();});top.addView(b);}topScroll.addView(top);root.addView(topScroll);
+  LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.HORIZONTAL);
+  LinearLayout rail=panelBox();rail.addView(t("FME NAVIGATION",13,gold));
+  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","MIX","MAESTRO / AI","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){Button b=s.equals(workspace)?activeButton(s):button(s);b.setOnClickListener(v->{workspace=s;showStudio();});rail.addView(b);}body.addView(rail,new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.WRAP_CONTENT));
+  ScrollView sc=new ScrollView(this);LinearLayout p=panelBox();p.addView(t("WORKSPACE · "+workspace,18,gold));p.addView(t(workspaceText(),12,white));addWorkspaceControls(p,status);
+  p.addView(t("CORE AUTHORITY",13,gold));p.addView(t("Project "+project.name+" · Tracks "+project.tracks().size()+" · Clips "+project.clips().size()+" · Assets "+project.assets().size()+" · Graph "+project.audioGraph.nodes().size()+" nodes / "+project.audioGraph.edges().size()+" routes",11,muted));
+  sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
  }
  void addWorkspaceControls(LinearLayout p,TextView status){
   if("ARRANGE".equals(workspace)){
