@@ -39,11 +39,30 @@ public class MainActivity extends Activity{
   p.addView(nav);
   p.addView(t("WORKSPACE · "+workspace,18,gold));
   p.addView(t(workspaceText(),13,white));
+  addWorkspaceControls(p,status);
 
   p.addView(t("CORE AUTHORITY",14,gold));
   p.addView(t("Project: "+project.name+"\nTracks: "+project.tracks().size()+" · Clips: "+project.clips().size()+" · Assets: "+project.assets().size()+"\nGraph nodes: "+project.audioGraph.nodes().size()+" · Graph routes: "+project.audioGraph.edges().size()+"\nUndo: "+(project.history.canUndo()?"ready":"empty")+" · Redo: "+(project.history.canRedo()?"ready":"empty"),12,muted));
   p.addView(t("External engines may donate/import capabilities and assets. They do not own Project, Transport, Timeline, Audio Graph, Track, Clip, Asset, Mixer, or Undo state.",12,muted));
   sc.addView(p);setContentView(sc);
+ }
+ void addWorkspaceControls(LinearLayout p,TextView status){
+  if("ARRANGE".equals(workspace)){
+   LinearLayout r=new LinearLayout(this);r.setOrientation(LinearLayout.HORIZONTAL);
+   Button undo=button("UNDO");undo.setOnClickListener(v->{project.history.undo();persist();showStudio();});r.addView(undo);
+   Button redo=button("REDO");redo.setOnClickListener(v->{project.history.redo();persist();showStudio();});r.addView(redo);p.addView(r);
+   if(!project.clips().isEmpty()){Button q=button("QUANTIZE FIRST CLIP");q.setOnClickListener(v->{project.grid.quantizeClip(project.clips().get(0).id,4);persist();showStudio();});p.addView(q);}
+  }else if("RECORD".equals(workspace)){
+   String firstAudio=null;for(Track tr:project.tracks())if(tr.kind==Track.Kind.AUDIO){firstAudio=tr.id;break;}
+   final String audioId=firstAudio;
+   if(audioId!=null){Button arm=button(project.recording.armed()?"DISARM":"ARM FIRST AUDIO");arm.setOnClickListener(v->{if(project.recording.armed())project.recording.disarm();else project.recording.arm(audioId);persist();showStudio();});p.addView(arm);
+    Button mon=button(project.recording.monitoring()?"MONITOR OFF":"MONITOR ON");mon.setEnabled(project.recording.armed());mon.setOnClickListener(v->{project.recording.monitoring(!project.recording.monitoring());persist();showStudio();});p.addView(mon);}
+  }else if("MIX".equals(workspace)){
+   Button down=button("MASTER -");down.setOnClickListener(v->{AudioGraph.Node m=project.audioGraph.node(AudioGraph.MASTER);project.mixer.masterGain(Math.max(0,m.get("gain",1)-.1));persist();showStudio();});p.addView(down);
+   Button up=button("MASTER +");up.setOnClickListener(v->{AudioGraph.Node m=project.audioGraph.node(AudioGraph.MASTER);project.mixer.masterGain(m.get("gain",1)+.1);persist();showStudio();});p.addView(up);
+  }else if("COMPOSE / MIDI".equals(workspace)){
+   p.addView(t("Grid: 1/4 beat · "+project.grid.framesForDivision(4)+" frames · Metronome "+(project.metronome.enabled()?"ON":"OFF"),12,green));
+  }
  }
  String workspaceText(){
   if("HOME".equals(workspace))return "Project "+project.name+" · "+project.tracks().size()+" tracks · "+project.clips().size()+" clips · "+project.assets().size()+" assets";
