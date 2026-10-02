@@ -87,10 +87,20 @@ public class MainActivity extends Activity{
   }else if("COMPOSE / MIDI".equals(workspace)){
    p.addView(t("Grid: 1/4 beat · "+project.grid.framesForDivision(4)+" frames · Metronome "+(project.metronome.enabled()?"ON":"OFF"),12,green));
   }else if("TV".equals(workspace)){
-   Button imp=button("IMPORT FILE");imp.setOnClickListener(v->importTvFile());p.addView(imp);
-   Button live=button("FREE LIVE TV");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
-   Asset current=project.tv.current();p.addView(t(current==null?"No TV media loaded":"Loaded · "+current.name,12,green));
-   if(current!=null){LinearLayout tvc=new LinearLayout(this);tvc.setOrientation(LinearLayout.HORIZONTAL);Button playTv=button("TV PLAY");playTv.setOnClickListener(v->{project.tv.play();persist();showStudio();});tvc.addView(playTv);Button pauseTv=button("TV PAUSE");pauseTv.setOnClickListener(v->{project.tv.pause();persist();showStudio();});tvc.addView(pauseTv);Button stopTv=button("TV STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);p.addView(tvc);}
+   p.addView(t("DEMONIC TV",20,gold));
+   LinearLayout tabs=new LinearLayout(this);tabs.setOrientation(LinearLayout.HORIZONTAL);
+   for(String label:new String[]{"LIVE TV","BROWSER / TV","IMPORT FILE","PLAYLISTS","FAVORITES","SETTINGS"}){Button b=button(label);if("IMPORT FILE".equals(label))b.setOnClickListener(v->importTvFile());else if("LIVE TV".equals(label)||"BROWSER / TV".equals(label))b.setOnClickListener(v->showLiveTvDialog());tabs.addView(b);}p.addView(tabs);
+   p.addView(t("CHANNELS · All Channels · Local · News · Movies · Kids · Music · International",12,muted));
+   Button live=button("ADD / PLAY FREE LIVE CHANNEL");live.setOnClickListener(v->showLiveTvDialog());p.addView(live);
+   if(!project.tv.liveChannels().isEmpty()){p.addView(t("LIVE CHANNELS",13,gold));for(int i=0;i<project.tv.liveChannels().size();i++){final int channel=i;DemonicTv.LiveChannel ch=project.tv.liveChannels().get(i);Button cb=button(String.format("%02d  %s  (Live)",i+1,ch.name));cb.setOnClickListener(v->{project.tv.playLiveChannel(channel);persist();showStudio();});p.addView(cb);}}
+   Asset current=project.tv.current();p.addView(t(current==null?"No TV media loaded":"NOW PLAYING · "+current.name,12,green));
+   LinearLayout tvc=new LinearLayout(this);tvc.setOrientation(LinearLayout.HORIZONTAL);
+   Button playTv=button("PLAY");playTv.setEnabled(current!=null);playTv.setOnClickListener(v->{project.tv.play();persist();showStudio();});tvc.addView(playTv);
+   Button pauseTv=button("PAUSE");pauseTv.setOnClickListener(v->{project.tv.pause();persist();showStudio();});tvc.addView(pauseTv);
+   Button stopTv=button("STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);
+   Button fs=button("FULLSCREEN");fs.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.FULLSCREEN);persist();showStudio();});tvc.addView(fs);
+   Button pip=button("PICTURE IN PICTURE");pip.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.PICTURE_IN_PICTURE);persist();showStudio();});tvc.addView(pip);p.addView(tvc);
+   p.addView(t("GUIDE · AUDIO TRACK · SUBTITLES · CHANNEL MANAGEMENT",12,muted));
   }else if("IMAGE / VIDEO".equals(workspace)){
    Clip media=null;for(Clip cl:project.clips()){Asset a=project.asset(cl.assetId);if(a!=null&&(a.kind==Asset.Kind.IMAGE||a.kind==Asset.Kind.VIDEO)){media=cl;break;}}
    final Clip mc=media;
