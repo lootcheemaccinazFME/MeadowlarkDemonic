@@ -174,6 +174,7 @@ public final class DemonicAddOnSuite {
         private final Map<String,VaultAsset> assets=new LinkedHashMap<>();
         public void put(VaultAsset a){assets.put(a.id,a);}
         public VaultAsset get(String id){return assets.get(id);}
+        public Collection<VaultAsset> all(){return Collections.unmodifiableCollection(assets.values());}
         public List<VaultAsset> search(String token){
             String q=token==null?"":token.toLowerCase(Locale.US); List<VaultAsset> out=new ArrayList<>();
             for(VaultAsset a:assets.values()) if(a.id.toLowerCase(Locale.US).contains(q)||a.type.toLowerCase(Locale.US).contains(q)||a.tags.toString().toLowerCase(Locale.US).contains(q)) out.add(a);
