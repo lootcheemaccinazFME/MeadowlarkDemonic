@@ -26,7 +26,7 @@ public final class DemonicTv {
     public boolean poweredOn(){return poweredOn;}
     public float volume(){return volume;}
     public List<LiveChannel> liveChannels(){return Collections.unmodifiableList(liveChannels);}
-    public void addLiveChannel(String name,String streamUrl){if(name==null||name.trim().isEmpty()||streamUrl==null||streamUrl.trim().isEmpty())throw new IllegalArgumentException("channel");liveChannels.add(new LiveChannel(name.trim(),streamUrl.trim()));}
+    public void addLiveChannel(String name,String streamUrl){if(name==null||name.trim().isEmpty()||streamUrl==null||streamUrl.trim().isEmpty())throw new IllegalArgumentException("channel");liveChannels.add(new LiveChannel(name.trim(),streamUrl.trim()));}\n    public void renameLiveChannel(int index,String name){if(index<0||index>=liveChannels.size())throw new IllegalArgumentException("channel");if(name==null||name.trim().isEmpty())throw new IllegalArgumentException("name");LiveChannel old=liveChannels.get(index);liveChannels.set(index,new LiveChannel(name.trim(),old.streamUrl));}\n    public void removeLiveChannel(int index){if(index<0||index>=liveChannels.size())throw new IllegalArgumentException("channel");liveChannels.remove(index);}\n    public void clearLiveChannels(){liveChannels.clear();}
     public Asset playLiveChannel(int index){if(index<0||index>=liveChannels.size())throw new IllegalArgumentException("channel");LiveChannel ch=liveChannels.get(index);Asset a=new Asset(Asset.Kind.VIDEO,ch.streamUrl,ch.name);project.addAssetUndoable(a);play(a.id);return a;}
     public static final class LiveChannel { public final String name,streamUrl; LiveChannel(String n,String u){name=n;streamUrl=u;} }
 
