@@ -52,10 +52,24 @@ public final class AudioRuntime {
     }
 
     public int pump(AndroidAudioIO io,int frames){
-        long at=project.transport.frame();
-        short[] pcm=render(at,frames);
-        int written=io.write(pcm,0,pcm.length);
-        if(written>0)project.transport.advance(written/2);
-        return written;
+        if(frames<1)return 0;
+        int remaining=frames,totalSamples=0;
+        while(remaining>0){
+            long at=project.transport.frame();
+            int chunk=remaining;
+            if(project.transport.loopEnabled()&&project.transport.loopEnd()>project.transport.loopStart()&&at<project.transport.loopEnd()){
+                long until=project.transport.loopEnd()-at;
+                if(until>0)chunk=(int)Math.min(chunk,until);
+            }
+            short[] pcm=render(at,chunk);
+            int written=io.write(pcm,0,pcm.length);
+            if(written<=0)break;
+            int writtenFrames=written/2;
+            project.transport.advance(writtenFrames);
+            totalSamples+=written;
+            remaining-=writtenFrames;
+            if(writtenFrames<chunk)break;
+        }
+        return totalSamples;
     }
 }
