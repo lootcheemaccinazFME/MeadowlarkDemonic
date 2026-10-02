@@ -7,5 +7,5 @@ public final class Clip{
  private Clip(String id,String trackId,String assetId,long start,long length,long offset){if(start<0||length<1||offset<0)throw new IllegalArgumentException("Invalid clip range");this.id=id;this.trackId=trackId;this.assetId=assetId;startFrame=start;lengthFrames=length;sourceOffsetFrames=offset;}
  public long endFrame(){return startFrame+lengthFrames;}
  public JSONObject toJson(){try{return new JSONObject().put("id",id).put("trackId",trackId).put("assetId",assetId).put("startFrame",startFrame).put("lengthFrames",lengthFrames).put("sourceOffsetFrames",sourceOffsetFrames);}catch(Exception e){throw new IllegalStateException(e);}}
- public static Clip fromJson(JSONObject o){return new Clip(o.getString("id"),o.getString("trackId"),o.getString("assetId"),o.optLong("startFrame",0),o.optLong("lengthFrames",1),o.optLong("sourceOffsetFrames",0));}
+ public static Clip fromJson(JSONObject o){return new Clip(o.optString("id",UUID.randomUUID().toString()),o.optString("trackId",""),o.optString("assetId",""),o.optLong("startFrame",0),o.optLong("lengthFrames",1),o.optLong("sourceOffsetFrames",0));}
 }
