@@ -1,5 +1,6 @@
 package com.flymaccin.meadowlarkdemonic;
 import java.util.*;
+import org.json.*;
 /** Image/video edit facade keyed to canonical media Clip IDs and shared timeline frames. */
 public final class MediaEditor{
  public static final class Transform{
@@ -14,4 +15,6 @@ public final class MediaEditor{
  public void setTransform(final String clipId,final double x,final double y,final double sx,final double sy,final double rotation,final double opacity){mediaClip(clipId);if(sx<=0||sy<=0)throw new IllegalArgumentException("scale");final Transform before=transform(clipId),after=new Transform();after.x=x;after.y=y;after.scaleX=sx;after.scaleY=sy;after.rotation=rotation;after.opacity=Math.max(0,Math.min(1,opacity));project.history.execute(new UndoHistory.Command(){public void apply(){transforms.put(clipId,after.copy());}public void revert(){transforms.put(clipId,before.copy());}public String label(){return "Media transform";}});}
  public void move(String clipId,long frame){mediaClip(clipId);project.arrangement.move(clipId,frame);}
  public void trim(String clipId,long frame,long length,long sourceOffset){mediaClip(clipId);project.arrangement.trim(clipId,frame,length,sourceOffset);}
+ public JSONObject toJson(){JSONObject out=new JSONObject();try{for(Map.Entry<String,Transform> e:transforms.entrySet()){Transform t=e.getValue();out.put(e.getKey(),new JSONObject().put("x",t.x).put("y",t.y).put("scaleX",t.scaleX).put("scaleY",t.scaleY).put("rotation",t.rotation).put("opacity",t.opacity));}return out;}catch(Exception e){throw new IllegalStateException("Media transform serialization failed",e);}}
+ public void loadJson(JSONObject in){transforms.clear();if(in==null)return;try{Iterator<String> keys=in.keys();while(keys.hasNext()){String id=keys.next();JSONObject o=in.optJSONObject(id);if(o==null)continue;Transform t=new Transform();t.x=o.optDouble("x",0);t.y=o.optDouble("y",0);t.scaleX=o.optDouble("scaleX",1);t.scaleY=o.optDouble("scaleY",1);t.rotation=o.optDouble("rotation",0);t.opacity=Math.max(0,Math.min(1,o.optDouble("opacity",1)));transforms.put(id,t);}}catch(Exception e){throw new IllegalArgumentException("Invalid media transforms",e);}}
 }
