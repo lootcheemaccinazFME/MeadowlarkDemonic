@@ -101,6 +101,10 @@ public class MainActivity extends Activity{
    Button stopTv=button("STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);
    Button fs=button("FULLSCREEN");fs.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.FULLSCREEN);persist();showStudio();});tvc.addView(fs);
    Button pip=button("PICTURE IN PICTURE");pip.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.PICTURE_IN_PICTURE);persist();showStudio();});tvc.addView(pip);p.addView(tvc);
+   LinearLayout prefs=new LinearLayout(this);prefs.setOrientation(LinearLayout.HORIZONTAL);
+   Button fav=button("FAVORITES "+project.tv.favoriteChannels().size());fav.setOnClickListener(v->{if(!project.tv.liveChannels().isEmpty()){project.tv.toggleFavorite(0);persist();showStudio();}});prefs.addView(fav);
+   Button subs=button(project.tv.subtitlesEnabled()?"CC ON":"CC OFF");subs.setOnClickListener(v->{project.tv.subtitlesEnabled(!project.tv.subtitlesEnabled());persist();showStudio();});prefs.addView(subs);
+   Button audio=button("AUDIO · "+project.tv.audioTrack());audio.setOnClickListener(v->{project.tv.audioTrack("Auto".equals(project.tv.audioTrack())?"Primary":"Auto");persist();showStudio();});prefs.addView(audio);p.addView(prefs);
    p.addView(t("＋ Add Channel   ▣ Import File   ☰ Manage Channels   ▤ EPG / Guide   ⛶ Fullscreen   ◫ Picture in Picture   ♫ Audio Track   CC Subtitles   ⚙ Settings",11,muted));
   }else if("IMAGE / VIDEO".equals(workspace)){
    Clip media=null;for(Clip cl:project.clips()){Asset a=project.asset(cl.assetId);if(a!=null&&(a.kind==Asset.Kind.IMAGE||a.kind==Asset.Kind.VIDEO)){media=cl;break;}}
