@@ -30,6 +30,9 @@ public final class AudioRuntime {
             double pan=node==null?0.0:Math.max(-1.0,Math.min(1.0,project.automation.valueAt(Automation.target(node.id,"pan"),startFrame,node.get("pan",0.0))));
             boolean mute=node!=null&&project.automation.valueAt(Automation.target(node.id,"mute"),startFrame,node.get("mute",0.0))>=0.5;
             if(mute)continue;
+            for(AudioGraph.Node routed:project.audioGraph.downstream(slice.track.graphNodeId)){
+                if(routed.type.startsWith("FX_"))GraphDsp.process(routed,pcm,count);
+            }
             double left=gain*(pan>0?1.0-pan:1.0),right=gain*(pan<0?1.0+pan:1.0);
             int offset=(int)(slice.timelineFrame-startFrame);
             for(int i=0;i<count&&offset+i<frames;i++){
