@@ -12,16 +12,17 @@ import android.widget.*;
 
 public class MainActivity extends Activity{
  int gold=Color.rgb(235,187,67),panel=Color.rgb(10,18,26),white=Color.rgb(240,240,244),muted=Color.rgb(145,145,155),green=Color.rgb(34,221,108),red=Color.rgb(235,25,38),deepRed=Color.rgb(92,8,12),black=Color.rgb(4,7,10);
- DemonicProject project; String workspace="HOME";
+ DemonicProject project; String workspace="HOME"; TvMediaPlayer tvPlayer; TvSurfaceController tvSurface;
  static final int PICK_TV_MEDIA=4401;
 
  public void onCreate(Bundle b){
   super.onCreate(b);getWindow().setStatusBarColor(Color.BLACK);
   project=ProjectStore.loadOrCreate(this);
+  tvPlayer=new TvMediaPlayer(this,project); tvSurface=new TvSurfaceController(this,project.tv);
   showStudio();
  }
  @Override protected void onPause(){super.onPause();if(project!=null)persist();}
- @Override protected void onStop(){if(project!=null)persist();super.onStop();}
+ @Override protected void onStop(){if(project!=null)persist();if(tvPlayer!=null)tvPlayer.release();super.onStop();}
  @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
   super.onActivityResult(requestCode,resultCode,data);
   if(requestCode!=PICK_TV_MEDIA||resultCode!=RESULT_OK||data==null||data.getData()==null)return;
@@ -60,6 +61,11 @@ public class MainActivity extends Activity{
   p.addView(t("CORE AUTHORITY",13,gold));p.addView(t("Project "+project.name+" · Tracks "+project.tracks().size()+" · Clips "+project.clips().size()+" · Assets "+project.assets().size()+" · Graph "+project.audioGraph.nodes().size()+" nodes / "+project.audioGraph.edges().size()+" routes",11,muted));
   sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
  }
+ void playTvMedia(){
+  try{if(tvPlayer==null)tvPlayer=new TvMediaPlayer(this,project);tvPlayer.play();persist();showStudio();}
+  catch(Exception e){Toast.makeText(this,"TV playback failed · "+e.getMessage(),Toast.LENGTH_LONG).show();project.tv.pause();persist();}
+ }
+
  void addWorkspaceControls(LinearLayout p,TextView status){
   if("HOME".equals(workspace)){
    p.addView(t("COMMAND CENTER",16,gold));
@@ -102,11 +108,11 @@ public class MainActivity extends Activity{
     if(!project.tv.liveChannels().isEmpty()){p.addView(t("LIVE CHANNELS · "+project.tv.selectedCategory(),13,gold));for(int i=0;i<project.tv.liveChannels().size();i++){final int channel=i;DemonicTv.LiveChannel ch=project.tv.liveChannels().get(i);if(!"All Channels".equals(project.tv.selectedCategory())&&!project.tv.selectedCategory().equals(ch.category))continue;Button cb=button(String.format("%02d  %s  · %s",i+1,ch.name,ch.category));cb.setOnClickListener(v->{project.tv.playLiveChannel(channel);persist();showStudio();});p.addView(cb);}}
    Asset current=project.tv.current();p.addView(t(current==null?"No TV media loaded":"NOW PLAYING · "+current.name,12,green));
    LinearLayout tvc=new LinearLayout(this);tvc.setOrientation(LinearLayout.HORIZONTAL);
-   Button playTv=button("PLAY");playTv.setEnabled(current!=null);playTv.setOnClickListener(v->{project.tv.play();persist();showStudio();});tvc.addView(playTv);
-   Button pauseTv=button("PAUSE");pauseTv.setOnClickListener(v->{project.tv.pause();persist();showStudio();});tvc.addView(pauseTv);
-   Button stopTv=button("STOP");stopTv.setOnClickListener(v->{project.tv.stop();persist();showStudio();});tvc.addView(stopTv);
-   Button fs=button("FULLSCREEN");fs.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.FULLSCREEN);persist();showStudio();});tvc.addView(fs);
-   Button pip=button("PICTURE IN PICTURE");pip.setOnClickListener(v->{project.tv.setSurface(DemonicTv.Surface.PICTURE_IN_PICTURE);persist();showStudio();});tvc.addView(pip);p.addView(tvc);
+   Button playTv=button("PLAY");playTv.setEnabled(current!=null);playTv.setOnClickListener(v->playTvMedia());tvc.addView(playTv);
+   Button pauseTv=button("PAUSE");pauseTv.setOnClickListener(v->{if(tvPlayer!=null)tvPlayer.pause();persist();showStudio();});tvc.addView(pauseTv);
+   Button stopTv=button("STOP");stopTv.setOnClickListener(v->{if(tvPlayer!=null)tvPlayer.stop();persist();showStudio();});tvc.addView(stopTv);
+   Button fs=button("FULLSCREEN");fs.setOnClickListener(v->{tvSurface.fullscreen();persist();showStudio();});tvc.addView(fs);
+   Button pip=button("PICTURE IN PICTURE");pip.setOnClickListener(v->{if(!tvSurface.pictureInPicture(16,9))Toast.makeText(this,"PiP unavailable on this device",Toast.LENGTH_SHORT).show();persist();});tvc.addView(pip);p.addView(tvc);
    LinearLayout prefs=new LinearLayout(this);prefs.setOrientation(LinearLayout.HORIZONTAL);
    Button fav=button("FAVORITES "+project.tv.favoriteChannels().size());fav.setOnClickListener(v->{if(!project.tv.liveChannels().isEmpty()){project.tv.toggleFavorite(0);persist();showStudio();}});prefs.addView(fav);
    Button subs=button(project.tv.subtitlesEnabled()?"CC ON":"CC OFF");subs.setOnClickListener(v->{project.tv.subtitlesEnabled(!project.tv.subtitlesEnabled());persist();showStudio();});prefs.addView(subs);
