@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.Typeface;
 import android.content.pm.PackageManager;
 import android.Manifest;
 import android.view.*;
@@ -21,7 +23,7 @@ public class MainActivity extends Activity{
  public void onCreate(Bundle b){
   super.onCreate(b);getWindow().setStatusBarColor(Color.BLACK);
   project=ProjectStore.loadOrCreate(this);
-  tvPlayer=new TvMediaPlayer(this,project); tvSurface=new TvSurfaceController(this,project.tv);
+  tvPlayer=new TvMediaPlayer(this,project); tvSurface=new TvSurfaceController(this,project.tv); takeRecorder=new AndroidTakeRecorder(this,project);
   showStudio();
  }
  @Override protected void onPause(){super.onPause();if(project!=null)persist();}
@@ -38,17 +40,19 @@ public class MainActivity extends Activity{
  void showLiveTvDialog(){LinearLayout form=new LinearLayout(this);form.setOrientation(LinearLayout.VERTICAL);final EditText name=new EditText(this);name.setHint("Channel name");form.addView(name);final EditText input=new EditText(this);input.setHint("Official/public HLS or media stream URL");form.addView(input);final Spinner category=new Spinner(this);String[] cats={"Local","News","Movies","Kids","Music","International"};category.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,cats));form.addView(category);new AlertDialog.Builder(this).setTitle("Add Live TV Channel").setMessage("Add a free, authorized public stream and assign its category.").setView(form).setPositiveButton("ADD & PLAY",(d,w)->{String u=input.getText().toString().trim();if(u.isEmpty())return;String n=name.getText().toString().trim();if(n.isEmpty())n="Live Channel";String cat=String.valueOf(category.getSelectedItem());project.tv.addLiveChannel(n,u,cat,"");project.tv.selectedCategory(cat);project.tv.playLiveChannel(project.tv.liveChannels().size()-1);persist();workspace="TV";showStudio();}).setNegativeButton("CANCEL",null).show();}
  String displayName(Uri uri){String name="Imported TV Media";Cursor cur=null;try{cur=getContentResolver().query(uri,null,null,null,null);if(cur!=null&&cur.moveToFirst()){int i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)name=cur.getString(i);}}finally{if(cur!=null)cur.close();}return name;}
  void importTvFile(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"video/*","audio/*"});i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(i,PICK_TV_MEDIA);}
- TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(18,12,18,12);return v;}
- LinearLayout panelBox(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);x.setPadding(14,10,14,10);x.setBackgroundColor(Color.rgb(7,11,15));return x;}
- Button button(String s){Button x=new Button(this);x.setText(s);x.setTextColor(white);x.setBackgroundColor(panel);return x;}
- Button activeButton(String s){Button x=button(s);x.setTextColor(Color.WHITE);x.setBackgroundColor(deepRed);return x;}
+ int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
+ GradientDrawable bg(int fill,int stroke,int radius){GradientDrawable d=new GradientDrawable();d.setColor(fill);d.setCornerRadius(dp(radius));d.setStroke(dp(1),stroke);return d;}
+ TextView t(String s,int z,int c){TextView v=new TextView(this);v.setText(s);v.setTextSize(z);v.setTextColor(c);v.setPadding(dp(12),dp(8),dp(12),dp(8));v.setFontFeatureSettings("kern");return v;}
+ LinearLayout panelBox(){LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);x.setPadding(dp(12),dp(10),dp(12),dp(10));x.setBackground(bg(Color.rgb(7,11,15),Color.rgb(55,43,20),8));return x;}
+ Button button(String s){Button x=new Button(this);x.setText(s);x.setTextSize(12);x.setAllCaps(false);x.setSingleLine(true);x.setTextColor(white);x.setPadding(dp(12),0,dp(12),0);x.setMinHeight(dp(44));x.setBackground(bg(panel,Color.rgb(32,42,52),6));return x;}
+ Button activeButton(String s){Button x=button(s);x.setTextColor(Color.WHITE);x.setBackground(bg(deepRed,red,6));return x;}
  void persist(){ProjectStore.save(this,project);}
 
  void showStudio(){
-  LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(8,8,8,8);root.setBackgroundColor(black);
+  LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(6),dp(6),dp(6),dp(6));root.setBackgroundColor(black);
   LinearLayout header=panelBox();LinearLayout brand=new LinearLayout(this);brand.setOrientation(LinearLayout.HORIZONTAL);
-  TextView fme=t("♛ FLYMACCIN ENT",24,gold);brand.addView(fme,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));
-  TextView demonic=t("DEMONIC ANDROID",22,red);brand.addView(demonic);header.addView(brand);
+  TextView fme=t("♛  FLYMACCIN ENT",22,gold);fme.setTypeface(Typeface.DEFAULT,Typeface.BOLD);brand.addView(fme,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));
+  TextView demonic=t("DEMONIC ANDROID",20,red);demonic.setTypeface(Typeface.DEFAULT,Typeface.BOLD);brand.addView(demonic);header.addView(brand);
   TextView status=t(statusText(),12,green);header.addView(status);
   LinearLayout transport=new LinearLayout(this);transport.setOrientation(LinearLayout.HORIZONTAL);
   Button rewind=button("|◀");transport.addView(rewind);Button play=activeButton("▶ PLAY");play.setOnClickListener(v->{project.transport.play();persist();status.setText(statusText());});transport.addView(play);
@@ -59,7 +63,7 @@ public class MainActivity extends Activity{
   for(String s:new String[]{"HOME","DEMONIC DAW","TV / MEDIA","EMULATOR","FME GAMES","AGENT / AI","AI VIDEO","COMICS / DESIGN","WRITING","ASSETS","DELIVER"}){Button b=button(s);if(("HOME".equals(s)&&"HOME".equals(workspace))||("TV / MEDIA".equals(s)&&"TV".equals(workspace)))b=activeButton(s);final String dest=s;b.setOnClickListener(v->{if("TV / MEDIA".equals(dest))workspace="TV";else if("DEMONIC DAW".equals(dest))workspace="ARRANGE";else if("AI VIDEO".equals(dest)||"COMICS / DESIGN".equals(dest))workspace="IMAGE / VIDEO";else if("AGENT / AI".equals(dest))workspace="MAESTRO / AI";else if("ASSETS".equals(dest))workspace="DOWNLOADS";else if("DELIVER".equals(dest))workspace="DELIVER";else if("WRITING".equals(dest)||"EMULATOR".equals(dest)||"FME GAMES".equals(dest)){Toast.makeText(this,dest+" · ADAPTER PENDING",Toast.LENGTH_SHORT).show();return;}else workspace="HOME";showStudio();});top.addView(b);}topScroll.addView(top);root.addView(topScroll);
   LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.HORIZONTAL);
   LinearLayout rail=panelBox();rail.addView(t("FME NAVIGATION",13,gold));
-  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","HYPHY","MIX","MAESTRO / AI","COLLAB","LIVE","DELIVER","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){Button b=s.equals(workspace)?activeButton(s):button(s);b.setOnClickListener(v->{workspace=s;showStudio();});rail.addView(b);}body.addView(rail,new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.WRAP_CONTENT));
+  for(String s:new String[]{"HOME","ARRANGE","RECORD","COMPOSE / MIDI","HYPHY","MIX","MAESTRO / AI","COLLAB","LIVE","DELIVER","DIRECTOR","IMAGE / VIDEO","BROWSER","DOWNLOADS","TV"}){Button b=s.equals(workspace)?activeButton(s):button(s);b.setTextSize(11);b.setOnClickListener(v->{workspace=s;showStudio();});rail.addView(b,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,dp(48)));}body.addView(rail,new LinearLayout.LayoutParams(dp(180),LinearLayout.LayoutParams.MATCH_PARENT));
   ScrollView sc=new ScrollView(this);LinearLayout p=panelBox();p.addView(t("WORKSPACE · "+workspace,18,gold));p.addView(t(workspaceText(),12,white));addWorkspaceControls(p,status);
   p.addView(t("CORE AUTHORITY",13,gold));p.addView(t("Project "+project.name+" · Tracks "+project.tracks().size()+" · Clips "+project.clips().size()+" · Assets "+project.assets().size()+" · Graph "+project.audioGraph.nodes().size()+" nodes / "+project.audioGraph.edges().size()+" routes",11,muted));
   sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
@@ -83,8 +87,11 @@ public class MainActivity extends Activity{
    LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
    LinearLayout daw=panelBox();daw.addView(t("DEMONIC DAW",14,red));daw.addView(t(project.tracks().size()+" tracks · "+project.clips().size()+" clips",11,white));Button openDaw=activeButton("OPEN DAW");openDaw.setOnClickListener(v->{workspace="ARRANGE";showStudio();});daw.addView(openDaw);row.addView(daw,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));
    LinearLayout tv=panelBox();tv.addView(t("DEMONIC TV",14,red));tv.addView(t(project.tv.liveChannels().size()+" channels · "+project.tv.selectedCategory(),11,white));Button openTv=activeButton("OPEN TV");openTv.setOnClickListener(v->{workspace="TV";showStudio();});tv.addView(openTv);row.addView(tv,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));p.addView(row);
-   LinearLayout modules=new LinearLayout(this);modules.setOrientation(LinearLayout.HORIZONTAL);
-   for(String s:new String[]{"VISUAL / BROWSER","UNIVERSAL EMULATOR","FME GAMES","AI VIDEO","FME AGENT"}){LinearLayout card=panelBox();card.addView(t(s,11,gold));card.addView(t("FME MODULE",10,muted));modules.addView(card,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1));}p.addView(modules);
+   LinearLayout modulesTop=new LinearLayout(this);modulesTop.setOrientation(LinearLayout.HORIZONTAL);
+   LinearLayout modulesBottom=new LinearLayout(this);modulesBottom.setOrientation(LinearLayout.HORIZONTAL);
+   String[] moduleNames={"VISUAL / BROWSER","UNIVERSAL EMULATOR","FME GAMES","AI VIDEO","FME AGENT","ASSETS"};
+   for(int i=0;i<moduleNames.length;i++){String s=moduleNames[i];LinearLayout card=panelBox();TextView ct=t(s,12,gold);ct.setTypeface(Typeface.DEFAULT,Typeface.BOLD);card.addView(ct);card.addView(t("OPEN MODULE",10,muted));final String dest=s;card.setOnClickListener(v->{if("VISUAL / BROWSER".equals(dest))workspace="BROWSER";else if("AI VIDEO".equals(dest))workspace="IMAGE / VIDEO";else if("ASSETS".equals(dest))workspace="DOWNLOADS";else{Toast.makeText(this,dest+" · ADAPTER PENDING",Toast.LENGTH_SHORT).show();return;}showStudio();});(i<3?modulesTop:modulesBottom).addView(card,new LinearLayout.LayoutParams(0,dp(92),1));}
+   p.addView(modulesTop);p.addView(modulesBottom);
   }else if("ARRANGE".equals(workspace)){
    LinearLayout r=new LinearLayout(this);r.setOrientation(LinearLayout.HORIZONTAL);
    Button undo=button("UNDO");undo.setOnClickListener(v->{project.history.undo();persist();showStudio();});r.addView(undo);
