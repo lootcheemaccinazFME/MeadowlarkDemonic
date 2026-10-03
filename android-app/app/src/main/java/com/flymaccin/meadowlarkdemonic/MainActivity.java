@@ -7,12 +7,15 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.content.pm.PackageManager;
+import android.Manifest;
 import android.view.*;
 import android.widget.*;
 
 public class MainActivity extends Activity{
  int gold=Color.rgb(235,187,67),panel=Color.rgb(10,18,26),white=Color.rgb(240,240,244),muted=Color.rgb(145,145,155),green=Color.rgb(34,221,108),red=Color.rgb(235,25,38),deepRed=Color.rgb(92,8,12),black=Color.rgb(4,7,10);
- DemonicProject project; String workspace="HOME"; TvMediaPlayer tvPlayer; TvSurfaceController tvSurface;
+ DemonicProject project; String workspace="HOME"; TvMediaPlayer tvPlayer; TvSurfaceController tvSurface; AndroidTakeRecorder takeRecorder;
+ static final int REQ_MIC=4402;
  static final int PICK_TV_MEDIA=4401;
 
  public void onCreate(Bundle b){
@@ -49,8 +52,8 @@ public class MainActivity extends Activity{
   TextView status=t(statusText(),12,green);header.addView(status);
   LinearLayout transport=new LinearLayout(this);transport.setOrientation(LinearLayout.HORIZONTAL);
   Button rewind=button("|◀");transport.addView(rewind);Button play=activeButton("▶ PLAY");play.setOnClickListener(v->{project.transport.play();persist();status.setText(statusText());});transport.addView(play);
-  Button stop=button("■ STOP");stop.setOnClickListener(v->{project.transport.stop();persist();status.setText(statusText());});transport.addView(stop);
-  Button rec=button("● REC");rec.setTextColor(red);rec.setOnClickListener(v->{project.transport.record();persist();status.setText(statusText());});transport.addView(rec);
+  Button stop=button("■ STOP");stop.setOnClickListener(v->{if(takeRecorder!=null&&takeRecorder.running())stopArmedTake();else{project.transport.stop();persist();status.setText(statusText());}});transport.addView(stop);
+  Button rec=button("● REC");rec.setTextColor(red);rec.setOnClickListener(v->startArmedTake());transport.addView(rec);
   transport.addView(t("  "+project.transport.bpm()+" BPM  ·  "+project.transport.sampleRate()+" Hz",12,white));header.addView(transport);root.addView(header);
   HorizontalScrollView topScroll=new HorizontalScrollView(this);LinearLayout top=new LinearLayout(this);top.setOrientation(LinearLayout.HORIZONTAL);
   for(String s:new String[]{"HOME","DEMONIC DAW","TV / MEDIA","EMULATOR","FME GAMES","AGENT / AI","AI VIDEO","COMICS / DESIGN","WRITING","ASSETS","DELIVER"}){Button b=button(s);if(("HOME".equals(s)&&"HOME".equals(workspace))||("TV / MEDIA".equals(s)&&"TV".equals(workspace)))b=activeButton(s);final String dest=s;b.setOnClickListener(v->{if("TV / MEDIA".equals(dest))workspace="TV";else if("DEMONIC DAW".equals(dest))workspace="ARRANGE";else if("AI VIDEO".equals(dest)||"COMICS / DESIGN".equals(dest))workspace="IMAGE / VIDEO";else if("AGENT / AI".equals(dest))workspace="MAESTRO / AI";else if("ASSETS".equals(dest))workspace="DOWNLOADS";else if("DELIVER".equals(dest))workspace="DELIVER";else if("WRITING".equals(dest)||"EMULATOR".equals(dest)||"FME GAMES".equals(dest)){Toast.makeText(this,dest+" · ADAPTER PENDING",Toast.LENGTH_SHORT).show();return;}else workspace="HOME";showStudio();});top.addView(b);}topScroll.addView(top);root.addView(topScroll);
@@ -61,6 +64,14 @@ public class MainActivity extends Activity{
   p.addView(t("CORE AUTHORITY",13,gold));p.addView(t("Project "+project.name+" · Tracks "+project.tracks().size()+" · Clips "+project.clips().size()+" · Assets "+project.assets().size()+" · Graph "+project.audioGraph.nodes().size()+" nodes / "+project.audioGraph.edges().size()+" routes",11,muted));
   sc.addView(p);body.addView(sc,new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1));root.addView(body,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(root);
  }
+ void startArmedTake(){
+  if(!project.recording.armed()){Toast.makeText(this,"Arm an audio track first",Toast.LENGTH_SHORT).show();workspace="RECORD";showStudio();return;}
+  if(Build.VERSION.SDK_INT>=23&&checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},REQ_MIC);return;}
+  try{takeRecorder.start(project.recording.armedTrackId());persist();showStudio();}catch(Exception e){Toast.makeText(this,"Record failed · "+e.getMessage(),Toast.LENGTH_LONG).show();}
+ }
+ void stopArmedTake(){try{if(takeRecorder!=null&&takeRecorder.running()){takeRecorder.stopAndCommit();persist();showStudio();}else{project.transport.stop();persist();showStudio();}}catch(Exception e){Toast.makeText(this,"Stop/commit failed · "+e.getMessage(),Toast.LENGTH_LONG).show();}}
+ @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){super.onRequestPermissionsResult(requestCode,permissions,grantResults);if(requestCode==REQ_MIC&&grantResults.length>0&&grantResults[0]==PackageManager.PERMISSION_GRANTED)startArmedTake();}
+
  void playTvMedia(){
   try{if(tvPlayer==null)tvPlayer=new TvMediaPlayer(this,project);tvPlayer.play();persist();showStudio();}
   catch(Exception e){Toast.makeText(this,"TV playback failed · "+e.getMessage(),Toast.LENGTH_LONG).show();project.tv.pause();persist();}
